@@ -2636,7 +2636,11 @@ static int dwc3_gadget_pullup(struct usb_gadget *g, int is_on)
 	disable_irq(dwc->irq);
 
 	/* prevent pending bh to run later */
+#ifdef CONFIG_USB_DWC3_RT_AFFINITY
+	kthread_flush_work(&dwc->kt_bh_work);
+#else
 	flush_work(&dwc->bh_work);
+#endif
 
 	if (is_on)
 		dwc3_device_core_soft_reset(dwc);
@@ -2773,7 +2777,11 @@ static int dwc3_gadget_vbus_session(struct usb_gadget *_gadget, int is_active)
 
 	disable_irq(dwc->irq);
 
+#ifdef CONFIG_USB_DWC3_RT_AFFINITY
+	kthread_flush_work(&dwc->kt_bh_work);
+#else
 	flush_work(&dwc->bh_work);
+#endif
 
 	spin_lock_irqsave(&dwc->lock, flags);
 
@@ -2937,7 +2945,11 @@ static int dwc3_gadget_stop(struct usb_gadget *g)
 	spin_unlock_irqrestore(&dwc->lock, flags);
 
 	dbg_event(0xFF, "fwq_started", 0);
+#ifdef CONFIG_USB_DWC3_RT_AFFINITY
+	kthread_flush_worker(&dwc->kt_worker);
+#else
 	flush_workqueue(dwc->dwc_wq);
+#endif
 	dbg_event(0xFF, "fwq_completed", 0);
 
 	return 0;
@@ -4345,9 +4357,15 @@ static irqreturn_t dwc3_process_event_buf(struct dwc3_event_buffer *evt)
 	return ret;
 }
 
+#ifdef CONFIG_USB_DWC3_RT_AFFINITY
+void dwc3_ktbh_work(struct kthread_work *w)
+{
+	struct dwc3 *dwc = container_of(w, struct dwc3, kt_bh_work);
+#else
 void dwc3_bh_work(struct work_struct *w)
 {
 	struct dwc3 *dwc = container_of(w, struct dwc3, bh_work);
+#endif
 
 	pm_runtime_get_sync(dwc->dev);
 	dwc3_thread_interrupt(dwc->irq, dwc->ev_buf);
@@ -4455,8 +4473,11 @@ irqreturn_t dwc3_interrupt(int irq, void *_dwc)
 		ret = status;
 
 	if (ret == IRQ_WAKE_THREAD)
+#ifdef CONFIG_USB_DWC3_RT_AFFINITY
+		kthread_queue_work(&dwc->kt_worker, &dwc->kt_bh_work);
+#else
 		queue_work(dwc->dwc_wq, &dwc->bh_work);
-
+#endif
 	return IRQ_HANDLED;
 }
 
