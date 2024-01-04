@@ -7237,6 +7237,7 @@ static int dwc3_msm_runtime_suspend(struct device *dev)
 {
 	struct dwc3_msm *mdwc = dev_get_drvdata(dev);
 	struct dwc3 *dwc = NULL;
+	int ret = 0;
 
 	if (mdwc->dwc3)
 		dwc = platform_get_drvdata(mdwc->dwc3);
@@ -7247,7 +7248,12 @@ static int dwc3_msm_runtime_suspend(struct device *dev)
 	if (dwc)
 		device_init_wakeup(dwc->dev, false);
 
-	return dwc3_msm_suspend(mdwc, false);
+	disable_irq(mdwc->wakeup_irq[PWR_EVNT_IRQ].irq);
+	ret = dwc3_msm_suspend(mdwc, true);
+	if (ret)
+		enable_irq(mdwc->wakeup_irq[PWR_EVNT_IRQ].irq);
+
+	return ret;
 }
 
 static int dwc3_msm_runtime_resume(struct device *dev)
