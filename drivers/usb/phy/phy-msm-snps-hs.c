@@ -718,6 +718,8 @@ static void msm_hsphy_vbus_draw_work(struct work_struct *w)
 		}
 	}
 
+	//Porting  from kernel 4.19/5.4 qcom platform baseline.
+	//dwc3_msm_gadget_vbus_draw() funcion.
 	chg_type = get_chg_type(phy);
 	if(chg_type == POWER_SUPPLY_USB_TYPE_UNKNOWN || chg_type == QTI_POWER_SUPPLY_TYPE_USB_FLOAT) {
         	dev_info(phy->phy.dev, "Avail curr from unknown USB = %u\n", phy->vbus_draw);
@@ -734,8 +736,6 @@ static void msm_hsphy_vbus_draw_work(struct work_struct *w)
 	if(chg_type != POWER_SUPPLY_USB_TYPE_SDP)
 		return;
 
-	if(chg_type != POWER_SUPPLY_TYPE_USB)
-		return;
  set_prop:
 	dev_info(phy->phy.dev, "Avail curr from USB = %u\n", phy->vbus_draw);
 
