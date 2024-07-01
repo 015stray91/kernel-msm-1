@@ -41,18 +41,8 @@
 #define UFS_VENDOR_MICRON	0x12C
 
 #if defined(CONFIG_SCSI_SKHID)
-#define IS_SKHYNIX_DEVICE(mfrid)   (0 == strncasecmp(mfrid,"SKHYNIX", sizeof("SKHYNIX")))
-#define IS_HYNIX_DEVICE(mfrid)   (0 == strncasecmp(mfrid,"HYNIX", sizeof("HYNIX")))
-
-#if defined(CONFIG_SCSI_UFS_HID)
-/* UFSHCD error handling flags */
-enum {
-	UFSHCD_EH_IN_PROGRESS = (1 << 0),		/* ufshcd.c */
-};
-
-#define ufshcd_eh_in_progress(h) \
-        ((h)->eh_flags & UFSHCD_EH_IN_PROGRESS)         /* ufshcd.c */
-#endif
+#define IS_SKHYNIX_DEVICE(mfrid)   (strncasecmp(mfrid, "SKHYNIX", sizeof("SKHYNIX")) == 0)
+#define IS_HYNIX_DEVICE(mfrid)   (strncasecmp(mfrid, "HYNIX", sizeof("HYNIX")) == 0)
 #endif
 
 /* vendor specific pre-defined parameters */
