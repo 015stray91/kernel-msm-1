@@ -272,7 +272,7 @@ def define_parrot():
 
         if variant == "consolidate":
             mod_list = _parrot_consolidate_in_tree_modules
-            board_bootconfig_extras += ["androidboot.serialconsole=1"]
+            #board_bootconfig_extras += ["androidboot.serialconsole=1"]
             board_kernel_cmdline_extras += [
                 # do not sort
                 "console=ttyMSM0,115200n8",
@@ -289,7 +289,7 @@ def define_parrot():
             mod_list = _parrot_in_tree_modules
             board_kernel_cmdline_extras += ["nosoftlockup console=ttynull qcom_geni_serial.con_enabled=0"]
             kernel_vendor_cmdline_extras += ["nosoftlockup console=ttynull qcom_geni_serial.con_enabled=0"]
-            board_bootconfig_extras += ["androidboot.serialconsole=0"]
+            #board_bootconfig_extras += ["androidboot.serialconsole=0"]
 
         define_msm_la(
             msm_target = target_name,
