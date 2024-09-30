@@ -456,6 +456,16 @@ static const struct dmi_system_id asus_laptop[] = {
 		},
 	},
 	{
+<<<<<<< HEAD
+=======
+		/* TongFang GMxXGxx sold as Eluktronics Inc. RP-15 */
+		.matches = {
+			DMI_MATCH(DMI_SYS_VENDOR, "Eluktronics Inc."),
+			DMI_MATCH(DMI_BOARD_NAME, "RP-15"),
+		},
+	},
+	{
+>>>>>>> android12-5.10-2024-08_r2
 		/* TongFang GM6XGxX/TUXEDO Stellaris 16 Gen5 AMD */
 		.matches = {
 			DMI_MATCH(DMI_BOARD_NAME, "GM6XGxX"),
