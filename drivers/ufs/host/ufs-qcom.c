@@ -36,6 +36,7 @@
 
 #include <soc/qcom/ice.h>
 
+#include <trace/hooks/ufshcd.h>
 #include <ufs/ufshcd.h>
 #include "ufshcd-pltfrm.h"
 #include <ufs/unipro.h>
@@ -540,6 +541,38 @@ static int ufs_qcom_get_pwr_dev_param(struct ufs_qcom_dev_params *qcom_param,
 	agreed_pwr->hs_rate = qcom_param->hs_rate;
 	return 0;
 }
+
+#if defined(CONFIG_UFSFEATURE)
+static void ufs_vh_prep_fn(void *data, struct ufs_hba *hba, struct request *rq,
+			   struct ufshcd_lrb *lrbp, int *err)
+{
+	*err = ufsf_prep_fn(ufs_qcom_get_ufsf(hba), lrbp);
+}
+
+static void ufs_vh_compl_command(void *data, struct ufs_hba *hba,
+				 struct ufshcd_lrb *lrbp)
+{
+	struct scsi_cmnd *cmd = lrbp->cmd;
+	int scsi_status, result, ocs;
+
+	if (!cmd)
+		return;
+
+	ocs = lrbp->utr_descriptor_ptr->header.ocs & MASK_OCS;
+	if (ocs != OCS_SUCCESS)
+		return;
+
+	result = lrbp->ucd_rsp_ptr->header.transaction_code;
+	if (result != UPIU_TRANSACTION_RESPONSE)
+		return;
+
+	scsi_status = lrbp->ucd_rsp_ptr->header.status;
+	if (scsi_status != SAM_STAT_GOOD)
+		return;
+
+	ufsf_upiu_check_for_ccd(lrbp);
+}
+#endif
 
 static struct ufs_qcom_host *rcdev_to_ufs_host(struct reset_controller_dev *rcd)
 {
@@ -1908,8 +1941,12 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
 	int err = 0;
 
-	if (status == PRE_CHANGE)
+	if (status == PRE_CHANGE) {
+#if defined(CONFIG_UFSFEATURE)
+		ufsf_suspend(ufs_qcom_get_ufsf(hba), pm_op == UFS_SYSTEM_PM);
+#endif
 		return 0;
+	}
 
 	/*
 	 * If UniPro link is not active or OFF, PHY ref_clk, main PHY analog
@@ -1951,6 +1988,11 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
 {
 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
 	int err;
+#if defined(CONFIG_UFSFEATURE)
+       struct ufsf_feature *ufsf = ufs_qcom_get_ufsf(hba);
+
+       schedule_work(&ufsf->resume_work);
+#endif
 
 	if (host->vddp_ref_clk && (hba->rpm_lvl > UFS_PM_LVL_3 ||
 				   hba->spm_lvl > UFS_PM_LVL_3))
@@ -4360,6 +4402,12 @@ static void ufs_qcom_event_notify(struct ufs_hba *hba,
 			dev_warn_ratelimited(hba->dev, "Warning: UFS BER exceeds threshold !!!\n");
 
 		break;
+#if defined(CONFIG_UFSFEATUREC)
+	case UFS_EVT_WL_SUSP_ERR:
+		ufsf_resume(ufs_qcom_get_ufsf(hba), true);
+		break;
+#endif
+
 	default:
 		break;
 	}
@@ -4936,6 +4984,9 @@ static int ufs_qcom_device_reset(struct ufs_hba *hba)
 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
 	int ret = 0;
 
+#if defined(CONFIG_UFSFEATURE)
+	ufsf_reset_host(ufs_qcom_get_ufsf(hba));
+#endif
 	/* reset gpio is optional */
 	if (!host->device_reset)
 		return -EOPNOTSUPP;
@@ -5005,6 +5056,9 @@ static struct ufs_dev_quirk ufs_qcom_dev_fixups[] = {
 static void ufs_qcom_fixup_dev_quirks(struct ufs_hba *hba)
 {
 	ufshcd_fixup_dev_quirks(hba, ufs_qcom_dev_fixups);
+#if defined(CONFIG_UFSFEATURE)
+	ufsf_set_init_state(hba);
+#endif
 }
 
 /* Resources */
@@ -5232,6 +5286,16 @@ out:
 	return ret;
 }
 
+static void ufs_qcom_config_scsi_dev(struct scsi_device *sdev)
+{
+#if defined(CONFIG_UFSFEATURE)
+	struct ufs_hba *hba = shost_priv(sdev->host);
+	struct ufsf_feature *ufsf = ufs_qcom_get_ufsf(hba);
+
+	ufsf_slave_configure(ufsf, sdev);
+#endif
+}
+
 /*
  * struct ufs_hba_qcom_vops - UFS QCOM specific variant operations
  *
@@ -5263,7 +5327,16 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
 	.op_runtime_config	= ufs_qcom_op_runtime_config,
 	.get_outstanding_cqs	= ufs_qcom_get_outstanding_cqs,
 	.config_esi		= ufs_qcom_config_esi,
+	.config_scsi_dev	= ufs_qcom_config_scsi_dev,
 };
+
+#if defined(CONFIG_UFSFEATURE)
+static void ufs_samsung_register_hooks(void)
+{
+	register_trace_android_vh_ufs_prepare_command(ufs_vh_prep_fn, NULL);
+	register_trace_android_vh_ufs_compl_command(ufs_vh_compl_command, NULL);
+}
+#endif
 
 /**
  * QCOM specific sysfs group and nodes
@@ -5993,6 +6066,10 @@ static int ufs_qcom_probe(struct platform_device *pdev)
 		return dev_err_probe(dev, err, "ufshcd_pltfrm_init() failed\n");
 
 	ufs_qcom_register_hooks();
+#if defined(CONFIG_UFSFEATURE)
+	/* Register hook for Samsung feature */
+	ufs_samsung_register_hooks();
+#endif
 	return err;
 }
 
@@ -6030,6 +6107,9 @@ static int ufs_qcom_remove(struct platform_device *pdev)
 		atomic_notifier_chain_unregister(&panic_notifier_list,
 				&host->ufs_qcom_panic_nb);
 
+#if defined(CONFIG_UFSFEATURE)
+	ufsf_remove(ufs_qcom_get_ufsf(hba));
+#endif
 	ufshcd_remove(hba);
 	platform_msi_domain_free_irqs(hba->dev);
 	return 0;
