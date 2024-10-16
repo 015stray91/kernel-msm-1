@@ -119,6 +119,9 @@ enum usbpd_control_msg_type {
 	MSG_FR_SWAP,
 	MSG_GET_PPS_STATUS,
 	MSG_GET_COUNTRY_CODES,
+	MSG_CTRL_GET_SINK_CAP_EXTENDED,
+	MSG_CTRL_GET_SOURCE_INFO,
+	MSG_CTRL_GET_REVISION,
 };
 
 static const char * const usbpd_control_msg_strings[] = {
@@ -137,6 +140,7 @@ enum usbpd_data_msg_type {
 	MSG_BATTERY_STATUS,
 	MSG_ALERT,
 	MSG_GET_COUNTRY_INFO,
+	MSG_GET_REVISION=0xC,
 	MSG_VDM = 0xF,
 };
 
@@ -161,6 +165,8 @@ enum usbpd_ext_msg_type {
 	MSG_PPS_STATUS,
 	MSG_COUNTRY_INFO,
 	MSG_COUNTRY_CODES,
+	MSG_GET_SINK_CAP_EXTENDED,
+	MSG_GET_SOURCE_INFO,
 };
 
 static const char * const usbpd_ext_msg_strings[] = {
@@ -249,7 +255,7 @@ static void *usbpd_ipc_log;
 
 /* Timeouts (in ms) */
 #define ERROR_RECOVERY_TIME	25
-#define SENDER_RESPONSE_TIME	26
+#define SENDER_RESPONSE_TIME	36
 #define SINK_WAIT_CAP_TIME	500
 #define PS_TRANSITION_TIME	455
 #define SRC_CAP_TIME		120
@@ -258,7 +264,7 @@ static void *usbpd_ipc_log;
 #define PS_HARD_RESET_TIME	25
 #define PS_SOURCE_ON		400
 #define PS_SOURCE_OFF		750
-#define FIRST_SOURCE_CAP_TIME	100
+#define FIRST_SOURCE_CAP_TIME	120
 #define VDM_BUSY_TIME		50
 #define VCONN_ON_TIME		100
 #define SINK_TX_TIME		16
@@ -360,9 +366,9 @@ static void *usbpd_ipc_log;
 #define SVDM_HDR_CMD_TYPE(hdr)	(((hdr) >> 6) & 0x3)
 #define SVDM_HDR_CMD(hdr)	((hdr) & 0x1f)
 
-#define SVDM_HDR(svid, ver, obj, cmd_type, cmd) \
-	(((svid) << 16) | (1 << 15) | ((ver) << 13) \
-	| ((obj) << 8) | ((cmd_type) << 6) | (cmd))
+#define SVDM_HDR(svid,ver,obj,cmd_type,cmd) \
+((ver==1)?(((svid)<<16)|(1<<15)|((ver)<<13)|(1<<11) |((obj )<<8)|((cmd_type)<<6)|(cmd)) :\
+(((svid)<<16)|(1<<15)|((ver)<<13) | ((obj )<<8)|((cmd_type)<<6)|(cmd)))
 
 /* discover id response vdo bit fields */
 #define ID_HDR_USB_HOST		BIT(31)
@@ -889,7 +895,6 @@ static int pd_select_pdo(struct usbpd *pd, int pdo_pos, int uv, int ua)
 	type = PD_SRC_PDO_TYPE(pdo);
 	if (type == PD_SRC_PDO_TYPE_FIXED) {
 		curr = max_current = PD_SRC_PDO_FIXED_MAX_CURR(pdo) * 10;
-
 		/*
 		 * Check if the PDO has enough current, otherwise set the
 		 * Capability Mismatch flag
@@ -1694,12 +1699,11 @@ static void handle_vdm_rx(struct usbpd *pd, struct rx_msg *rx_msg)
 	/* Standard Discovery or unhandled messages go here */
 	switch (cmd_type) {
 	case SVDM_CMD_TYPE_INITIATOR:
-		if (cmd != USBPD_SVDM_ATTENTION) {
-			if (pd->spec_rev == USBPD_REV_30) {
-				ret = pd_send_msg(pd, MSG_NOT_SUPPORTED, NULL,
-						0, SOP_MSG);
-				if (ret)
-					usbpd_set_state(pd, PE_SEND_SOFT_RESET);
+		{
+			if (!pd->has_dp || (cmd != USBPD_SVDM_ATTENTION)) {
+					usbpd_send_svdm(pd, svid, cmd,
+					SVDM_CMD_TYPE_RESP_NAK, 0, NULL, 0);
+					return; /*NAK to dis*/
 			}
 		}
 		break;
@@ -1867,7 +1871,7 @@ static void handle_get_src_cap_extended(struct usbpd *pd)
 		u8  pdp;
 	} __packed caps = {0};
 
-	caps.vid = 0x5c6;
+	caps.vid = 0x22b8;
 	caps.num_batt = 1;
 	caps.pdp = 5 * PD_SRC_PDO_FIXED_MAX_CURR(default_src_caps[0]) / 100;
 
@@ -1875,6 +1879,87 @@ static void handle_get_src_cap_extended(struct usbpd *pd)
 			sizeof(caps), SOP_MSG);
 	if (ret)
 		usbpd_set_state(pd, PE_SEND_SOFT_RESET);
+}
+
+static void handle_get_source_info(struct usbpd *pd){
+	int ret;
+	union {
+		unsigned long AsUINT32;
+		struct {
+			unsigned long PortReportedPDP :8;
+			unsigned long PortPresentPDP :8;
+			unsigned long PortMaximumPDP :8;
+			unsigned long  :7;
+			unsigned long PortType :1;
+		};
+	} __packed caps = {0};
+	caps.PortType =1;
+	caps.PortMaximumPDP =15;
+	caps.PortReportedPDP =10;
+	caps.PortPresentPDP =10;
+
+	ret = pd_send_ext_msg(pd, MSG_GET_SOURCE_INFO, (u8 *)&caps.AsUINT32,
+			sizeof(caps), SOP_MSG);
+	if (ret)
+		usbpd_set_state(pd, PE_SEND_SOFT_RESET);
+}
+static void handle_get_revision(struct usbpd *pd){
+	int ret;
+	u32 caps =0x31170000;
+
+	ret = pd_send_msg(pd, MSG_GET_REVISION, &caps,
+			1, SOP_MSG);
+	if (ret)
+		usbpd_set_state(pd, PE_SEND_SOFT_RESET);
+}
+static void handle_get_sink_cap_extended(struct usbpd *pd)
+{
+	int ret;
+	struct {
+		u16 vid;          /*size:2*/
+		u16 pid;		 /*size:2*/
+		u32 xid;		/*size:4*/
+		u8  fw_version; /*size:1*/
+		u8  hw_version;  /*size:1*/
+		u8  SKEDBVersion; /*size:1*/
+		u8  LoadStep;      /*size:1*/
+		u16 SinkLoadCharacteristics;  /*size:2*/
+		u8  Compliance;     /*size:1*/
+		u8  TouchTemp;      /*size:1*/
+		u8  BatteryInfo;     /*size:1*/
+		u8  SinkModes;       /*size:1*/
+		u8  SinkMinimumPDP;   /*size:1*/
+		u8  SinkOperationalPDP;    /*size:1*/
+		u8  SinkMaximumPDP;    /*size:1*/
+		u8  EPRSinkMinimumPDP;   /*size:1*/
+		u8  EPRSinkOperationalPDP;  /*size:1*/
+		u8  EPRSinkMaximumPDP; /*size:1*/
+	} __packed caps = {0};
+
+	caps.vid = 0x22b8;
+	caps.pid = 1;
+	caps.xid = 0;
+	caps.fw_version = 0;
+	caps.hw_version=0x20;
+	caps.SKEDBVersion=0x1;
+	caps.LoadStep=0x0;
+	caps.SinkLoadCharacteristics=0x8000;
+	caps.Compliance=0x0;
+	caps.TouchTemp=0x1;
+	caps.BatteryInfo=0x1;
+	caps.SinkModes =0xA |0x01;
+	caps.SinkMinimumPDP=0x0;
+	caps.SinkOperationalPDP = 15;
+	caps.SinkMaximumPDP = 30;
+	caps.EPRSinkMinimumPDP =0x0;
+	caps.EPRSinkOperationalPDP =0x0;
+	caps.EPRSinkMaximumPDP =0x0;
+
+	ret = pd_send_ext_msg(pd, MSG_GET_SINK_CAP_EXTENDED, (u8 *)&caps,
+			sizeof(caps), SOP_MSG);
+	if (ret)
+		usbpd_set_state(pd, PE_SEND_SOFT_RESET);
+	usbpd_warn(&pd->dev, "handle_get_sink_cap_extended \n");
 }
 
 static void handle_get_battery_cap(struct usbpd *pd, struct rx_msg *rx_msg)
@@ -1887,22 +1972,26 @@ static void handle_get_battery_cap(struct usbpd *pd, struct rx_msg *rx_msg)
 		u16 capacity;
 		u16 last_full;
 		u8  type;
-	} __packed bcdb = {0, 0, 0xffff, 0xffff, 0};
+	} __packed bcdb = { 0xffff, 0, 0, 0, 0};
 
 	if (rx_msg->data_len != 1) {
 		usbpd_err(&pd->dev, "Invalid payload size: %d\n",
 				rx_msg->data_len);
 		return;
 	}
-
 	bat_num = rx_msg->payload[0];
-
-	if (bat_num || !pd->bat_psy) {
+	if (bat_num) {
 		usbpd_warn(&pd->dev, "Battery %d unsupported\n", bat_num);
 		bcdb.type = BIT(0); /* invalid */
 		goto send;
 	}
-
+	bcdb.vid = 0x22b8;
+	bcdb.pid = 0x2e70;
+	if(!pd->bat_psy){
+		bcdb.capacity =0x23;
+		bcdb.last_full=0xdb;
+		goto send;
+	}
 	bcdb.capacity = ((pd->bat_charge_full / 1000) *
 			(pd->bat_voltage_max / 1000)) / 100000;
 	/* fix me */
@@ -1921,7 +2010,7 @@ static void handle_get_battery_status(struct usbpd *pd, struct rx_msg *rx_msg)
 	int cap;
 	union power_supply_propval val = {0};
 	u8 bat_num;
-	u32 bsdo = 0xffff0000;
+	u32 bsdo = 0x00000000;
 
 	if (rx_msg->data_len != 1) {
 		usbpd_err(&pd->dev, "Invalid payload size: %d\n",
@@ -1929,14 +2018,19 @@ static void handle_get_battery_status(struct usbpd *pd, struct rx_msg *rx_msg)
 		return;
 	}
 
-	bat_num = rx_msg->payload[0];
+	bat_num = rx_msg->payload[2];
 
-	if (bat_num || !pd->bat_psy) {
+	if (bat_num) {
 		usbpd_warn(&pd->dev, "Battery %d unsupported\n", bat_num);
 		bsdo |= BIT(8); /* invalid */
 		goto send;
 	}
-
+	if (!pd->bat_psy) {
+		bsdo |= BIT(9);
+		if (PE_SRC_READY == pd->current_state)
+			bsdo |= (1 << 10);
+		goto send;
+	}
 	ret = power_supply_get_property(pd->bat_psy, POWER_SUPPLY_PROP_PRESENT,
 			&val);
 	if (ret || !val.intval)
@@ -2429,7 +2523,6 @@ static void enter_state_src_negotiate_capability(struct usbpd *pd)
 		usbpd_set_state(pd, PE_SEND_SOFT_RESET);
 		return;
 	}
-
 	/* tSrcTransition required after ACCEPT */
 	usleep_range(SRC_TRANSITION_TIME * USEC_PER_MSEC,
 			(SRC_TRANSITION_TIME + 5) * USEC_PER_MSEC);
@@ -2535,7 +2628,11 @@ static void handle_state_src_ready(struct usbpd *pd, struct rx_msg *rx_msg)
 		usbpd_warn(&pd->dev, "Unexpected message\n");
 		usbpd_set_state(pd, PE_SEND_SOFT_RESET);
 		return;
-	} else if (rx_msg && !IS_CTRL(rx_msg, MSG_NOT_SUPPORTED)) {
+	} else if (IS_CTRL(rx_msg, MSG_CTRL_GET_SOURCE_INFO)){
+		handle_get_source_info(pd);
+	} else if (IS_CTRL(rx_msg, MSG_CTRL_GET_REVISION)) {
+		handle_get_revision(pd);
+	}else if (rx_msg && !IS_CTRL(rx_msg, MSG_NOT_SUPPORTED)) {
 		usbpd_dbg(&pd->dev, "Unsupported message\n");
 		ret = pd_send_msg(pd, pd->spec_rev == USBPD_REV_30 ?
 				MSG_NOT_SUPPORTED : MSG_REJECT,
@@ -2995,6 +3092,14 @@ static bool handle_ctrl_snk_ready(struct usbpd *pd, struct rx_msg *rx_msg)
 		break;
 	case MSG_GET_SOURCE_CAP_EXTENDED:
 		handle_get_src_cap_extended(pd);
+		break;
+
+	case MSG_CTRL_GET_SINK_CAP_EXTENDED:
+		handle_get_sink_cap_extended(pd);
+		break;
+
+	case MSG_CTRL_GET_REVISION:
+		handle_get_revision(pd);
 		break;
 	case MSG_ACCEPT:
 	case MSG_REJECT:
@@ -5194,3 +5299,4 @@ module_exit(usbpd_exit);
 
 MODULE_DESCRIPTION("USB Power Delivery Policy Engine");
 MODULE_LICENSE("GPL");
+
