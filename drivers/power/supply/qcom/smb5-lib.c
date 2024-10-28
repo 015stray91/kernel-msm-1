@@ -2022,7 +2022,13 @@ int smblib_vbus_regulator_enable(struct regulator_dev *rdev)
 		smblib_err(chg, "Couldn't enable OTG rc=%d\n", rc);
 		return rc;
 	}
-
+#ifdef CONFIG_MOT_SET_OTG_VOL_5V5
+        rc = smblib_masked_write(chg, 0x1186, GENMASK(2,0), 0x07);
+        if (rc < 0) {
+               smblib_err(chg, "Couldn't enable OTG boost rc=%d\n", rc);
+               return rc;
+        }
+#endif
 	return 0;
 }
 

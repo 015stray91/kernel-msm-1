@@ -29,4 +29,10 @@ config QPNP_USB_PDPHY
 	  The is used to handle the PHY layer communication of the
 	  Power Delivery stack.
 
+config MOT_SET_SRC_CAP_5V1A
+	bool "Set PD source capabilty 5V1A"
+	default n
+	help
+	  Say Y to select the src caps 5V1A. It should match with the OTG max
+	  max current.
 endmenu

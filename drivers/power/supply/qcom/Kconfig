@@ -113,4 +113,12 @@ config QTI_QBG
 
 	  To compile this driver as a module, choose M here: the
 	  module will be called qti-qbg-main.
+
+config MOT_SET_OTG_VOL_5V5
+	bool "Set OTG VOLTAGE TO 5V5"
+	default n
+	help
+	  Say Y to set otg output voltage 5.5V. It will ensure the EU PD cetification
+	  case Multiple Request Load Test Post PR Swap can test PASS.
+
 endif
