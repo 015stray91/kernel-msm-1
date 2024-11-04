@@ -2041,7 +2041,12 @@ int smblib_vbus_regulator_enable(struct regulator_dev *rdev)
 		smblib_err(chg, "Couldn't enable OTG rc=%d\n", rc);
 		return rc;
 	}
-
+	//set boost otg vbus to 5.5V
+        rc = smblib_masked_write(chg, DCDC_CMD_OTG_VBOOST_REG, OTG_VBOOST_MASK, DCDC_CMD_OTG_VBOOST_5P5V);
+        if (rc < 0) {
+		smblib_err(chg, "Couldn't enable OTG boost rc=%d\n", rc);
+		return rc;
+	}
 	mmi_set_pump_otg_en(chg, true);
 
 	return 0;

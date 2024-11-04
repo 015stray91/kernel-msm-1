@@ -255,7 +255,7 @@ static void *usbpd_ipc_log;
 
 /* Timeouts (in ms) */
 #define ERROR_RECOVERY_TIME	25
-#define SENDER_RESPONSE_TIME	36
+#define SENDER_RESPONSE_TIME	28
 #define SINK_WAIT_CAP_TIME	500
 #define PS_TRANSITION_TIME	455
 #define SRC_CAP_TIME		120
@@ -263,7 +263,7 @@ static void *usbpd_ipc_log;
 #define SRC_RECOVER_TIME	750
 #define PS_HARD_RESET_TIME	25
 #define PS_SOURCE_ON		400
-#define PS_SOURCE_OFF		750
+#define PS_SOURCE_OFF		760
 #define FIRST_SOURCE_CAP_TIME	120
 #define VDM_BUSY_TIME		50
 #define VCONN_ON_TIME		100
@@ -807,7 +807,7 @@ static int pd_send_msg(struct usbpd *pd, u8 msg_type, const u32 *data,
 
 	/* bail out and try again later if a message just arrived */
 	spin_lock_irqsave(&pd->rx_lock, flags);
-	if (!list_empty(&pd->rx_q)) {
+	if (!list_empty(&pd->rx_q) && (msg_type != MSG_SOFT_RESET)) {
 		spin_unlock_irqrestore(&pd->rx_lock, flags);
 		usbpd_dbg(&pd->dev, "Abort send due to pending RX\n");
 		return -EBUSY;
@@ -2916,6 +2916,12 @@ static void enter_state_snk_select_capability(struct usbpd *pd)
 	int ret;
 
 	log_decoded_request(pd, pd->rdo);
+
+	if(PD_RDO_FIXED_CURR(pd->rdo)==0) {
+		union power_supply_propval val = {0};
+		ret = usbpd_set_psy_iio_property(pd,
+			POWER_SUPPLY_PROP_PD_CURRENT_MAX, &val);
+	}
 
 	ret = pd_send_msg(pd, MSG_REQUEST, &pd->rdo, 1, SOP_MSG);
 	if (ret) {
