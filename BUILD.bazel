@@ -101,6 +101,7 @@ filegroup(
         # keep sorted
         "android/abi_gki_aarch64_asr",
         "android/abi_gki_aarch64_asus",
+        "android/abi_gki_aarch64_bcmstb",
         "android/abi_gki_aarch64_db845c",
         "android/abi_gki_aarch64_exynos",
         "android/abi_gki_aarch64_exynosauto",
@@ -120,6 +121,7 @@ filegroup(
         "android/abi_gki_aarch64_rockchip",
         "android/abi_gki_aarch64_sony",
         "android/abi_gki_aarch64_tuxera",
+        "android/abi_gki_aarch64_type_visibility",
         "android/abi_gki_aarch64_unisoc",
         "android/abi_gki_aarch64_virtual_device",
         "android/abi_gki_aarch64_vivo",
@@ -593,6 +595,7 @@ _ROCKPI4_MODULE_OUTS = [
     "drivers/char/hw_random/virtio-rng.ko",
     "drivers/clk/clk-rk808.ko",
     "drivers/cpufreq/cpufreq-dt.ko",
+    "drivers/cpufreq/tegra20-cpufreq.ko",
     "drivers/dma/pl330.ko",
     "drivers/gpu/drm/bridge/analogix/analogix_dp.ko",
     "drivers/gpu/drm/bridge/synopsys/dw-hdmi.ko",
