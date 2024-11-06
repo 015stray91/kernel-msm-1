@@ -1699,11 +1699,15 @@ static void handle_vdm_rx(struct usbpd *pd, struct rx_msg *rx_msg)
 	/* Standard Discovery or unhandled messages go here */
 	switch (cmd_type) {
 	case SVDM_CMD_TYPE_INITIATOR:
-		{
-			if (!pd->has_dp || (cmd != USBPD_SVDM_ATTENTION)) {
+		if (cmd != USBPD_SVDM_ATTENTION) {
+			if(cmd == USBPD_SVDM_DISCOVER_IDENTITY)
 					usbpd_send_svdm(pd, svid, cmd,
-					SVDM_CMD_TYPE_RESP_NAK, 0, NULL, 0);
-					return; /*NAK to dis*/
+						SVDM_CMD_TYPE_RESP_NAK, 0, NULL, 0);
+			else if (pd->spec_rev == USBPD_REV_30) {
+				ret = pd_send_msg(pd, MSG_NOT_SUPPORTED, NULL,
+								 0, SOP_MSG);
+				if (ret)
+						usbpd_set_state(pd, PE_SEND_SOFT_RESET);
 			}
 		}
 		break;
@@ -1869,6 +1873,7 @@ static void handle_get_src_cap_extended(struct usbpd *pd)
 		u8  source_inputs;
 		u8  num_batt;
 		u8  pdp;
+		u8  epr_source_pdp;
 	} __packed caps = {0};
 
 	caps.vid = 0x22b8;
