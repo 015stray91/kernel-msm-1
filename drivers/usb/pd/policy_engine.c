@@ -2018,7 +2018,7 @@ static void handle_get_battery_status(struct usbpd *pd, struct rx_msg *rx_msg)
 		return;
 	}
 
-	bat_num = rx_msg->payload[2];
+	bat_num = rx_msg->payload[0];
 
 	if (bat_num) {
 		usbpd_warn(&pd->dev, "Battery %d unsupported\n", bat_num);
