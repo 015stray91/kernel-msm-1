@@ -3237,6 +3237,7 @@ static int haptics_runtime_resume_get(struct haptics_chip *chip)
 	if (!is_haptics_runtime_pm_enabled(chip))
 		return 0;
 
+	haptics_module_enable(chip, true);
 	return pm_runtime_resume_and_get(chip->dev);
 }
 
@@ -7514,9 +7515,6 @@ static int __maybe_unused haptics_resume(struct device *dev)
 	}
 #endif
 
-	if (is_haptics_runtime_pm_enabled(chip))
-		return 0;
-
 	return haptics_module_enable(chip, true);
 }
 
@@ -7541,9 +7539,6 @@ static int __maybe_unused haptics_restore(struct device *dev)
 	rc = haptics_ds_resume_config(dev);
 	if (rc < 0)
 		return rc;
-
-	if (is_haptics_runtime_pm_enabled(chip))
-		return 0;
 
 	return haptics_module_enable(chip, true);
 
