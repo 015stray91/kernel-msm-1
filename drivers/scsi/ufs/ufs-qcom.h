@@ -18,6 +18,10 @@
 #include "ufsfeature.h"
 #endif
 
+#if defined(CONFIG_SCSI_SKHID)
+#include "ufs-manual-gc.h"
+#endif
+
 #define MAX_UFS_QCOM_HOSTS	2
 #define MAX_U32                 (~(u32)0)
 #define MPHY_TX_FSM_STATE       0x41
@@ -44,6 +48,20 @@
 
 #define UFS_VENDOR_MICRON	0x12C
 
+#if defined(CONFIG_SCSI_SKHID)
+#define IS_SKHYNIX_DEVICE(mfrid)   (0 == strncasecmp(mfrid,"SKHYNIX",sizeof("SKHYNIX")))
+#define IS_HYNIX_DEVICE(mfrid)   (0 == strncasecmp(mfrid,"HYNIX",sizeof("HYNIX")))
+
+#if defined(CONFIG_SCSI_UFS_HID)
+/* UFSHCD error handling flags */
+enum {
+	UFSHCD_EH_IN_PROGRESS = (1 << 0),		/* ufshcd.c */
+};
+
+#define ufshcd_eh_in_progress(h) \
+        ((h)->eh_flags & UFSHCD_EH_IN_PROGRESS)         /* ufshcd.c */
+#endif
+#endif
 #define SLOW 1
 #define FAST 2
 
@@ -93,9 +111,9 @@ enum {
 	REG_UFS_TX_SYMBOL_CLK_NS_US         = 0xC4,
 	REG_UFS_LOCAL_PORT_ID_REG           = 0xC8,
 	REG_UFS_PA_ERR_CODE                 = 0xCC,
+	/* On older UFS revisions, this register is called "RETRY_TIMER_REG" */
 	REG_UFS_PARAM0                      = 0xD0,
-	REG_UFS_PA_LINK_STARTUP_TIMER       = 0xD8,
-
+	/* On older UFS revisions, this register is called "REG_UFS_PA_LINK_STARTUP_TIMER" */
 	REG_UFS_CFG0                        = 0xD8,
 	REG_UFS_CFG1                        = 0xDC,
 	REG_UFS_CFG2                        = 0xE0,
@@ -291,10 +309,10 @@ static inline void ufs_qcom_assert_reset(struct ufs_hba *hba)
 			1 << OFFSET_UFS_PHY_SOFT_RESET, REG_UFS_CFG1);
 
 	/*
-	 * Make sure assertion of ufs phy reset is written to
-	 * register before returning
+	 * Dummy read to ensure the write takes effect before doing any sort
+	 * of delay
 	 */
-	mb();
+	ufshcd_readl(hba, REG_UFS_CFG1);
 }
 
 static inline void ufs_qcom_deassert_reset(struct ufs_hba *hba)
@@ -303,10 +321,10 @@ static inline void ufs_qcom_deassert_reset(struct ufs_hba *hba)
 			0 << OFFSET_UFS_PHY_SOFT_RESET, REG_UFS_CFG1);
 
 	/*
-	 * Make sure de-assertion of ufs phy reset is written to
-	 * register before returning
+	 * Dummy read to ensure the write takes effect before doing any sort
+	 * of delay
 	 */
-	mb();
+	ufshcd_readl(hba, REG_UFS_CFG1);
 }
 
 struct ufs_qcom_bus_vote {
@@ -629,6 +647,11 @@ struct ufs_qcom_host {
 	bool irq_affinity_support;
 	bool bypass_pbl_rst_wa;
 	struct notifier_block ufs_qcom_panic_nb;
+#if defined(CONFIG_SCSI_SKHID)
+	struct work_struct update_sysfs_work;
+	/* manual_gc */
+	struct ufs_manual_gc manual_gc;
+#endif
 
 };
 
