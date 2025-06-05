@@ -87,3 +87,6 @@ type 'struct cgroup_root' changed
 1 variable symbol(s) removed
   'struct tracepoint __tracepoint_android_vh_mutex_unlock_slowpath_before_wakeq'
 
+type 'struct scm_fp_list' changed
+  byte size changed from 2040 to 2048
+  member 'short count_unix' was added
