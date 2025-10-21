@@ -287,6 +287,8 @@ struct battery_chg_dev {
 	struct dentry			*debugfs_dir;
 	void				*notifier_cookie[BC_NOTIFY_PANEL_MAX];
 	bool				notify_vote[BC_NOTIFY_PANEL_MAX];
+	struct delayed_work		panel_register_work;
+	int				panel_register_retry_cnt;
 	u32				*thermal_levels;
 	const char			*wls_fw_name;
 	int				curr_thermal_level;
@@ -2749,6 +2751,32 @@ int nfc_regulator_en(struct bharger_regulator *vreg, bool enable)
 }
 #endif
 
+#define BC_PANEL_REGISTER_DELAY_MS 500
+#define BC_PANEL_REGISTER_RETRY_CNT 20
+static void battery_chg_panel_register_work(struct work_struct *work)
+{
+	struct battery_chg_dev *bcdev = container_of(work,
+					struct battery_chg_dev,
+					panel_register_work.work);
+	int rc;
+	int i;
+
+	for (i = 0; i < BC_NOTIFY_PANEL_MAX && i < ARRAY_SIZE(notify_panel_cfg); i++) {
+		if (bcdev->notifier_cookie[i])
+			continue;
+		rc = battery_chg_register_panel_notifier(bcdev, &notify_panel_cfg[i]);
+		if (rc == -EPROBE_DEFER &&
+		    bcdev->panel_register_retry_cnt < BC_PANEL_REGISTER_RETRY_CNT) {
+			schedule_delayed_work(&bcdev->panel_register_work,
+					msecs_to_jiffies(BC_PANEL_REGISTER_DELAY_MS));
+			bcdev->panel_register_retry_cnt++;
+		} else if (rc < 0) {
+			dev_err(bcdev->dev, "Error in registering panel %s, rc=%d\n",
+				notify_panel_cfg[i].panel_name, rc);
+		}
+	}
+}
+
 static int battery_chg_probe(struct platform_device *pdev)
 {
 	struct battery_chg_dev *bcdev;
@@ -2796,13 +2824,8 @@ static int battery_chg_probe(struct platform_device *pdev)
 	INIT_WORK(&bcdev->subsys_up_work, battery_chg_subsys_up_work);
 	INIT_WORK(&bcdev->usb_type_work, battery_chg_update_usb_type_work);
 	INIT_WORK(&bcdev->battery_check_work, battery_chg_check_status_work);
+	INIT_DELAYED_WORK(&bcdev->panel_register_work, battery_chg_panel_register_work);
 	bcdev->dev = dev;
-
-	for (i = 0; i < BC_NOTIFY_PANEL_MAX && i < ARRAY_SIZE(notify_panel_cfg); i++) {
-		rc = battery_chg_register_panel_notifier(bcdev, &notify_panel_cfg[i]);
-		if (rc < 0)
-			goto reg_error;
-	}
 
 	client_data.id = MSG_OWNER_BC;
 	client_data.name = "battery_charger";
@@ -2816,7 +2839,7 @@ static int battery_chg_probe(struct platform_device *pdev)
 		if (rc != -EPROBE_DEFER)
 			dev_err(dev, "Error in registering with pmic_glink %d\n",
 				rc);
-		goto reg_error;
+		return rc;
 	}
 
 	down_write(&bcdev->state_sem);
@@ -2884,6 +2907,7 @@ static int battery_chg_probe(struct platform_device *pdev)
 	battery_chg_notify_enable(bcdev);
 	device_init_wakeup(bcdev->dev, true);
 	schedule_work(&bcdev->usb_type_work);
+	schedule_delayed_work(&bcdev->panel_register_work, msecs_to_jiffies(0));
 
 	rc = get_charge_control_en(bcdev);
 	if (rc < 0)
@@ -2902,11 +2926,6 @@ error:
 	complete(&bcdev->ack);
 	unregister_reboot_notifier(&bcdev->reboot_notifier);
 	pmic_glink_unregister_client(bcdev->client);
-reg_error:
-	for (i = 0; i < BC_NOTIFY_PANEL_MAX; i++) {
-		if (bcdev->notifier_cookie[i])
-			panel_event_notifier_unregister(bcdev->notifier_cookie[i]);
-	}
 	return rc;
 }
 
@@ -2920,10 +2939,13 @@ static void battery_chg_remove(struct platform_device *pdev)
 	bcdev->initialized = false;
 	up_write(&bcdev->state_sem);
 
+	cancel_delayed_work(&bcdev->panel_register_work);
 	for (i = 0; i < BC_NOTIFY_PANEL_MAX; i++) {
-		if (bcdev->notifier_cookie[i])
-			panel_event_notifier_unregister(bcdev->notifier_cookie[i]);
+		if (!bcdev->notifier_cookie[i])
+			continue;
+		panel_event_notifier_unregister(bcdev->notifier_cookie[i]);
 	}
+	bcdev->panel_register_retry_cnt = 0;
 
 	device_init_wakeup(bcdev->dev, false);
 	debugfs_remove_recursive(bcdev->debugfs_dir);
