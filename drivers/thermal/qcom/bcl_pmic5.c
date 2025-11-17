@@ -23,6 +23,7 @@
 #include <linux/nvmem-consumer.h>
 #include <linux/ipc_logging.h>
 #include "thermal_zone_internal.h"
+#include <linux/of_platform.h>
 
 #define BCL_DRIVER_NAME       "bcl_pmic5"
 #define BCL_MONITOR_EN        0x46
@@ -195,6 +196,18 @@ struct bcl_device {
 static struct bcl_device *bcl_devices[MAX_PERPH_COUNT];
 static int bcl_device_ct;
 static BLOCKING_NOTIFIER_HEAD(bcl_pmic5_notifier);
+
+static unsigned int boot_seq = 0;
+static void mmi_get_boot_seq(void)
+{
+	struct device_node *n = of_find_node_by_path("/chosen");
+
+	if (n == NULL)
+		return;
+
+	of_property_read_u32(n, "mmi,boot_seq", &boot_seq);
+	of_node_put(n);
+}
 
 void bcl_pmic5_notifier_register(struct notifier_block *n)
 {
@@ -729,6 +742,8 @@ static irqreturn_t bcl_handle_irq(int irq, void *data)
 		(struct bcl_peripheral_data *)data;
 	unsigned int irq_status = 0;
 	int ibat = 0, vbat = 0;
+	static unsigned long bcl_lvl0_cnt = 0, bcl_lvl1_cnt = 0, bcl_lvl2_cnt = 0;
+
 	struct bcl_device *bcl_perph;
 
 	if (!perph_data->tz_dev)
@@ -743,10 +758,25 @@ static irqreturn_t bcl_handle_irq(int irq, void *data)
 		bcl_read_vbat_tz(bcl_perph->param[BCL_VBAT_LVL0].tz_dev, &vbat);
 
 	if (irq_status & perph_data->status_bit_idx) {
+
+		switch (perph_data->type) {
+		case BCL_LVL0:
+			if (irq_status & BCL_IRQ_L0) bcl_lvl0_cnt++;
+			break;
+		case BCL_LVL1:
+			if (irq_status & BCL_IRQ_L1) bcl_lvl1_cnt++;
+			break;
+		case BCL_LVL2:
+			if (irq_status & BCL_IRQ_L2) bcl_lvl2_cnt++;
+			break;
+		default:
+			break;
+		}
+
 		pr_err(
-		"Irq:%d triggered for bcl type:%s. status:%u ibat=%d vbat=%d\n",
+		"Irq:%d triggered for bcl type:%s. status:%u, LVL0_cnt %lu, LVL1_cnt %lu, LVL2_cnt %lu, boot_seq %u, ibat=%d vbat=%d\n",
 			irq, bcl_int_names[perph_data->type],
-			irq_status, ibat, vbat);
+			irq_status, bcl_lvl0_cnt, bcl_lvl1_cnt, bcl_lvl2_cnt, boot_seq, ibat, vbat);
 		BCL_IPC(bcl_perph,
 		"Irq:%d triggered for bcl type:%s. status:%u ibat=%d vbat=%d\n",
 			irq, bcl_int_names[perph_data->type],
@@ -1204,6 +1234,7 @@ static int bcl_probe(struct platform_device *pdev)
 		pr_err("%s: unable to create IPC Logging for %s\n",
 					__func__, bcl_name);
 
+	mmi_get_boot_seq();
 	return 0;
 }
 
