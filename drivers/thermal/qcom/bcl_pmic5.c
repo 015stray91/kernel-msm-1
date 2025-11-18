@@ -672,7 +672,7 @@ static int bcl_set_lbat(struct thermal_zone_device *tz, int low, int high)
 		disable_irq_nosync(bat_data->irq_num);
 		disable_irq_wake(bat_data->irq_num);
 		bat_data->irq_enabled = false;
-		pr_err("lbat[%d]: disable irq:%d\n",
+		pr_debug("lbat[%d]: disable irq:%d\n",
 				bat_data->type,
 				bat_data->irq_num);
 	} else if (high != INT_MAX &&
@@ -680,7 +680,7 @@ static int bcl_set_lbat(struct thermal_zone_device *tz, int low, int high)
 		enable_irq(bat_data->irq_num);
 		enable_irq_wake(bat_data->irq_num);
 		bat_data->irq_enabled = true;
-		pr_err("lbat[%d]: enable irq:%d\n",
+		pr_debug("lbat[%d]: enable irq:%d\n",
 				bat_data->type,
 				bat_data->irq_num);
 	}
@@ -719,7 +719,7 @@ static int bcl_read_lbat(struct thermal_zone_device *tz, int *adc_value)
 		goto bcl_read_exit;
 	}
 	bat_data->last_val = *adc_value;
-	pr_err("lbat:%d val:%d\n", bat_data->type,
+	pr_debug("lbat:%d val:%d\n", bat_data->type,
 			bat_data->last_val);
 	if (bcl_perph->param[BCL_IBAT_LVL0].tz_dev)
 		bcl_read_ibat(bcl_perph->param[BCL_IBAT_LVL0].tz_dev, &ibat);
@@ -727,7 +727,7 @@ static int bcl_read_lbat(struct thermal_zone_device *tz, int *adc_value)
 		bcl_read_ibat(bcl_perph->param[BCL_2S_IBAT_LVL0].tz_dev, &ibat);
 	if (bcl_perph->param[BCL_VBAT_LVL0].tz_dev)
 		bcl_read_vbat_tz(bcl_perph->param[BCL_VBAT_LVL0].tz_dev, &vbat);
-	pr_err("LVLbat:%d val:%d\n", bat_data->type,
+	pr_debug("LVLbat:%d val:%d\n", bat_data->type,
 			bat_data->last_val);
 	BCL_IPC(bcl_perph, "LVLbat:%d val:%d\n", bat_data->type,
 			bat_data->last_val);
