@@ -1785,7 +1785,9 @@ extern u64 oscillate_ts_ns;
 extern u64 walt_rotation_stop_hyst_start_ts;
 #if IS_ENABLED(CONFIG_SCHED_WALT_MIDPOINT)
 extern void midpoint_init(void);
+extern void midpoint_stop(void);
 #else
 static inline void midpoint_init(void) {}
+static inline void midpoint_stop(void) {}
 #endif
 #endif /* _WALT_H */
