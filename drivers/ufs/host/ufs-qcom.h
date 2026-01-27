@@ -23,6 +23,10 @@
 #include "vendor/ufs-manual-gc.h"
 #endif
 
+#if defined(CONFIG_UFS_LONGSYS_RT_CP_TIMEOUT)
+#define UFS_VENDOR_LONGSYS 0xBD6
+#endif
+
 #define MAX_UFS_QCOM_HOSTS	2
 #define MAX_U32                 (~(u32)0)
 #define MPHY_TX_FSM_STATE       0x41

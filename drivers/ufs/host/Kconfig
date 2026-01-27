@@ -198,3 +198,11 @@ config SCSI_SKHID
 	depends on SCSI_UFSHCD
 	help
 	  SKHix UFS HID Feature Enable
+
+config UFS_LONGSYS_RT_CP_TIMEOUT
+	bool "Moto fix Longsys UFS CP0 Timeout issue with hooks"
+	depends on SCSI_UFSHCD
+	default n
+	help
+	  Enable on products that use Longsys UFS.
+	  This require Kernel support on mcq vendor hook like in kernel 5.15.

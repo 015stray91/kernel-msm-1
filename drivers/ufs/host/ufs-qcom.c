@@ -630,6 +630,26 @@ check_last_req:
 }
 #endif
 
+#if defined(CONFIG_UFS_LONGSYS_RT_CP_TIMEOUT)
+static void ufs_longsys_clear_cp_flag_hook(void *data, struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+{
+	if (!lrbp || !lrbp->ucd_req_ptr || !lrbp->cmd)
+		return;
+
+	struct request *rq = scsi_cmd_to_rq(lrbp->cmd);
+	struct ufs_dev_info *dev_info = &hba->dev_info;
+	unsigned int ioprio_class = IOPRIO_PRIO_CLASS(req_get_ioprio(rq));
+
+	if (ioprio_class == IOPRIO_CLASS_RT && dev_info->wmanufacturerid == UFS_VENDOR_LONGSYS) {
+		struct utp_upiu_req *ucd_req_ptr = lrbp->ucd_req_ptr;
+
+		if (ucd_req_ptr->header.flags & UPIU_CMD_FLAGS_CP){
+			ucd_req_ptr->header.flags &= ~UPIU_CMD_FLAGS_CP;
+		}
+	}
+}
+#endif
+
 static struct ufs_qcom_host *rcdev_to_ufs_host(struct reset_controller_dev *rcd)
 {
 	return container_of(rcd, struct ufs_qcom_host, rcdev);
@@ -5436,6 +5456,13 @@ static void ufs_samsung_register_hooks(void)
 }
 #endif
 
+#if defined(CONFIG_UFS_LONGSYS_RT_CP_TIMEOUT)
+static void ufs_longsys_register_hooks(void)
+{
+	register_trace_android_vh_ufs_send_command(ufs_longsys_clear_cp_flag_hook, NULL);
+}
+#endif
+
 /**
  * QCOM specific sysfs group and nodes
  */
@@ -6167,6 +6194,10 @@ static int ufs_qcom_probe(struct platform_device *pdev)
 #if defined(CONFIG_UFSFEATURE)
 	/* Register hook for Samsung feature */
 	ufs_samsung_register_hooks();
+#endif
+#if defined(CONFIG_UFS_LONGSYS_RT_CP_TIMEOUT)
+	/* Register hook for Longsys feature */
+	ufs_longsys_register_hooks();
 #endif
 	return err;
 }
