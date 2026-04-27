@@ -1,0 +1,19 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {}
+}{
+    "name": "Moto sm6450 Kernel Build Environment",
+    "image": "://microsoft.com",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscodecpptools",
+                "GitHubcopilot",
+                "GitHubcopilot-chat",
+                "ms-vscodecpptools-extension-pack"
+            ]
+        }
+    },
+    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y build-essential git ccache flex bison libssl-dev libelf-dev bc libncurses-dev xz-utils lz4 python3 clang-12 lld-12 llvm-12 && sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100 && sudo update-alternatives --install /usr/bin/ld.lld ld.lld /usr/bin/lld-12 100",
+    "remoteUser": "vscode"
+}
