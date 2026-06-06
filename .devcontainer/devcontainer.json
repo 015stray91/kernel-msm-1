@@ -1,25 +1,47 @@
-{]"name": "SM 6450 Kernel Build Environment",
-    "image": "://microsoft.com",
-    "features": {
-        "ghcr.io/devcontainers/features/llvm:1": { "version": "12" }
-    },
-    "customizations": {
-        "vscode": {
-            "extensions": [  
-   in "ms-vscodecpptool thes",
-                "GitHubcopilot",
-                "GitHubcopilot-chat",
-                "ms-vscodecpptools-extension-pack
-                "ms-vscodecpptools",
-           
-            ]
+{
+  "name": "Moto Kernel Build Env",
+  "image": "://microsoft.com",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:1": {},
+    "ghcr.io/devcontainers/features/llvm:1": { "version": "12" }
+  },
+  "containerEnv": {
+    "CC": "clang-12",
+    "CXX": "clang++-12",
+    "LD": "ld.lld-12"
+  },
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y clang-12 llvm-12 lld-12 make gcc-aarch64-linux-gnu build-essential libssl-dev libelf-dev flex bison git ccache bc libncurses-dev xz-utils lz4 python3 && sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100 && sudo update-alternatives --install /usr/bin/ld.lld ld.lld /usr/bin/lld-12 100",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-python.python",
+        "GitHub.copilot",
+        "stale-z.continue",
+        "ms-vscode.cmake-tools",
+        "vadimcn.vscode-lldb",
+        "llvm-vs-code-extensions.vscode-clangd"
+      ],
+      "settings": {
+        "continue.model": "gemini-1.5-pro",
+        "continue.apiKey": "AIzaSyA3VJPmZo09Mk16_mVGbQ3SRYeC5EHSsFc",
+        "continue.temperature": 0.7,
+        "continue.maxTokens": 8192,
+        "continue.enableCodeCompletion": true,
+        "continue.enableChat": true,
+        "continue.enableTabAutocomplete": true,
+        "C_Cpp.default.cppStandard": "gnu11",
+        "C_Cpp.default.cStandard": "gnu11",
+        "C_Cpp.default.compilerPath": "/usr/bin/clang-12",
+        "C_Cpp.default.intelliSenseMode": "linux-clang-x64",
+        "files.associations": {
+          "*.mk": "makefile",
+          "Kconfig*": "makefile",
+          "Makefile*": "makefile"
         }
-    },
-    "postCreateCommand": "bash ./scripts/apply_patches.sh"
-}
-        }
-    },
-    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y build-essential git ccache flex bison libssl-dev libelf-dev bc libncurses-dev xz-utils lz4 python3 clang-12 lld-12 llvm-12 && sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100 && sudo update-alternatives --install /usr/bin/ld.lld ld.lld /usr/bin/lld-12 100",
-    "remoteUser": "vscode"
+      }
+    }
+  },
+  "remoteUser": "vscode"
 }
 

@@ -1,0 +1,71 @@
+{
+  "models": [
+    {
+      "title": "Kernel Assistant",
+      "provider": "google",
+      "model": "gemini-1.5-pro",
+      "apiKey": "AIzaSyA3VJPmZo09Mk16_mVGbQ3SRYeC5EHSsFc",
+      "apiBase": "https://generativelanguage.googleapis.com/v1beta",
+      "temperature": 0.7,
+      "maxTokens": 8192,
+      "contextLength": 1048576
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Kernel Assistant",
+    "provider": "google",
+    "model": "gemini-1.5-pro",
+    "apiKey": "AIzaSyA3VJPmZo09Mk16_mVGbQ3SRYeC5EHSsFc",
+    "apiBase": "https://generativelanguage.googleapis.com/v1beta"
+  },
+  "chatModel": {
+    "title": "Kernel Assistant",
+    "provider": "google",
+    "model": "gemini-1.5-pro",
+    "apiKey": "AIzaSyA3VJPmZo09Mk16_mVGbQ3SRYeC5EHSsFc",
+    "apiBase": "https://generativelanguage.googleapis.com/v1beta"
+  },
+  "disableIndexing": false,
+  "disableSessionTitles": false,
+  "enableCodeCompletion": true,
+  "enableTabAutocomplete": true,
+  "enableChat": true,
+  "experimental": {
+    "enableFileAnnotations": true,
+    "enableModelSwitcher": true
+  },
+  "contextProviders": [
+    "codebase",
+    "openFiles",
+    "code",
+    "docs",
+    "search",
+    "diff",
+    "terminal",
+    "problems",
+    "folder"
+  ],
+  "customInstructions": "You are an expert Android Kernel developer for the Moto G Stylus 5G 2023 (genevn). Always read .ai-memory.md before answering. SoC: SM6450. Branch: android-14-release-u1tgns34.42-86-2-32+. Strategy: Split ramdisk between boot and recovery (4096k page size).",
+  "slashCommands": [
+    {
+      "name": "edit",
+      "description": "Edit selected code",
+      "params": []
+    },
+    {
+      "name": "comment",
+      "description": "Add comments to code",
+      "params": []
+    },
+    {
+      "name": "share",
+      "description": "Share code with context",
+      "params": []
+    },
+    {
+      "name": "test",
+      "description": "Generate tests for code",
+      "params": []
+    }
+  ]
+}

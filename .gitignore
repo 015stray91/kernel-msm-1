@@ -96,6 +96,9 @@ modules.order
 !.gitattributes
 !.gitignore
 !.mailmap
+!.devcontainer/
+!.continue/
+!.env.example
 
 #
 # Generated include files
