@@ -9,7 +9,14 @@
 #include <linux/security.h>
 #include <linux/uaccess.h>
 #include <linux/compat.h>
+#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
+#include <linux/susfs_def.h>
+#include "mount.h"
+#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
 #include "internal.h"
+#ifdef CONFIG_ZEROMOUNT
+#include <linux/zeromount.h>
+#endif
 
 static int flags_by_mnt(int mnt_flags)
 {
@@ -86,11 +93,23 @@ EXPORT_SYMBOL(vfs_get_fsid);
 int vfs_statfs(const struct path *path, struct kstatfs *buf)
 {
 	int error;
+#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
+	struct mount *mnt;
 
+	mnt = real_mount(path->mnt);
+	if (likely(susfs_is_current_proc_umounted_app())) {
+		for (; mnt->mnt_id >= DEFAULT_KSU_MNT_ID; mnt = mnt->mnt_parent) { }
+	}
+	error = statfs_by_dentry(mnt->mnt.mnt_root, buf);
+	if (!error)
+		buf->f_flags = calculate_f_flags(&mnt->mnt);
+	return error;
+#else
 	error = statfs_by_dentry(path->dentry, buf);
 	if (!error)
 		buf->f_flags = calculate_f_flags(path->mnt);
 	return error;
+#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
 }
 EXPORT_SYMBOL(vfs_statfs);
 
@@ -102,7 +121,14 @@ int user_statfs(const char __user *pathname, struct kstatfs *st)
 retry:
 	error = user_path_at(AT_FDCWD, pathname, lookup_flags, &path);
 	if (!error) {
+#ifdef CONFIG_ZEROMOUNT
+		int spoofed;
+#endif
 		error = vfs_statfs(&path, st);
+#ifdef CONFIG_ZEROMOUNT
+		spoofed = zeromount_spoof_statfs(pathname, st);
+		(void)spoofed;
+#endif
 		path_put(&path);
 		if (retry_estale(error, lookup_flags)) {
 			lookup_flags |= LOOKUP_REVAL;

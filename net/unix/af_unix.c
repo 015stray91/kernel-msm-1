@@ -115,6 +115,9 @@
 #include <linux/file.h>
 
 #include "scm.h"
+#ifdef CONFIG_ZEROMOUNT
+#include <linux/zeromount.h>
+#endif
 
 struct hlist_head unix_socket_table[2 * UNIX_HASH_SIZE];
 EXPORT_SYMBOL_GPL(unix_socket_table);
@@ -2880,6 +2883,24 @@ static int unix_seq_show(struct seq_file *seq, void *v)
 	else {
 		struct sock *s = v;
 		struct unix_sock *u = unix_sk(s);
+
+#ifdef CONFIG_ZEROMOUNT
+		if (atomic_read(&zeromount_hide_adb)) {
+			uid_t uid = from_kuid_munged(&init_user_ns, current_uid());
+
+			if (uid >= 10000 && u->addr) {
+				const char *path = u->addr->name->sun_path;
+				int len = u->addr->len - sizeof(short);
+
+				if (!UNIX_ABSTRACT(s) && len > 0)
+					len--;
+				if (strnstr(path, "adbd", len) ||
+				    strnstr(path, "jdwp", len))
+					return 0;
+			}
+		}
+#endif
+
 		unix_state_lock(s);
 
 		seq_printf(seq, "%pK: %08X %08X %08X %04X %02X %5lu",

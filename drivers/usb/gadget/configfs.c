@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0
 #include <linux/configfs.h>
 #include <linux/module.h>
+#ifdef CONFIG_ZEROMOUNT
+#include <linux/zeromount.h>
+#include <linux/cred.h>
+#endif
 #include <linux/slab.h>
 #include <linux/device.h>
 #include <linux/nls.h>
@@ -689,7 +693,23 @@ static const struct config_item_type functions_type = {
 	.ct_owner       = THIS_MODULE,
 };
 
-GS_STRINGS_RW(gadget_config_name, configuration);
+GS_STRINGS_W(gadget_config_name, configuration);
+#ifdef CONFIG_ZEROMOUNT
+static ssize_t gadget_config_name_configuration_show(struct config_item *item,
+						     char *page)
+{
+	struct gadget_config_name *gs = to_gadget_config_name(item);
+	if (atomic_read(&zeromount_hide_adb)) {
+		uid_t uid = from_kuid_munged(&init_user_ns, current_uid());
+		if (uid >= 10000)
+			return sprintf(page, "none\n");
+	}
+	return sprintf(page, "%s\n", gs->configuration ?: "");
+}
+#else
+GS_STRINGS_R(gadget_config_name, configuration);
+#endif
+CONFIGFS_ATTR(gadget_config_name_, configuration);
 
 static struct configfs_attribute *gadget_config_name_langid_attrs[] = {
 	&gadget_config_name_attr_configuration,
@@ -1755,6 +1775,14 @@ static ssize_t state_show(struct device *pdev, struct device_attribute *attr,
 	struct usb_composite_dev *cdev;
 	char *state = "DISCONNECTED";
 	unsigned long flags;
+
+#ifdef CONFIG_ZEROMOUNT
+	if (atomic_read(&zeromount_hide_adb)) {
+		uid_t uid = from_kuid_munged(&init_user_ns, current_uid());
+		if (uid >= 10000)
+			return sprintf(buf, "DISCONNECTED\n");
+	}
+#endif
 
 	if (!dev)
 		goto out;

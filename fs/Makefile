@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0
 #
-# Makefile for the Linux filesystems.
+# Makefile for the Linux filesystems with AnyRealm Matrix Core integration.
 #
 # 14 Sep 2000, Christoph Hellwig <hch@infradead.org>
 # Rewritten to use lists instead of if-statements.
@@ -8,6 +8,17 @@
 
 subdir-ccflags-y += -DANDROID_GKI_VFS_EXPORT_ONLY=VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver
 
+# ===================================================================
+# ANYREALM MATRIX HOOK ARRAYS (Forced First-Pass Symbol Registration)
+# ===================================================================
+obj-y				+= koto/
+obj-y				+= sufs_wrapper.o
+obj-y				+= fs_fuse_anyrealm_fuse.o
+obj-$(CONFIG_KSU_SUSFS)		+= susfs.o
+
+# ===================================================================
+# STANDARD LINUX VFS CORE OBJECTS
+# ===================================================================
 obj-y :=	open.o read_write.o file_table.o super.o \
 		char_dev.o stat.o exec.o pipe.o namei.o fcntl.o \
 		ioctl.o readdir.o select.o dcache.o inode.o \
@@ -71,9 +82,6 @@ obj-$(CONFIG_DLM)		+= dlm/
 obj-$(CONFIG_FSCACHE)		+= fscache/
 obj-$(CONFIG_REISERFS_FS)	+= reiserfs/
 obj-$(CONFIG_EXT4_FS)		+= ext4/
-# We place ext4 before ext2 so that clean ext3 root fs's do NOT mount using the
-# ext2 driver, which doesn't know about journalling!  Explicitly request ext2
-# by giving the rootfstype= parameter.
 obj-$(CONFIG_EXT2_FS)		+= ext2/
 obj-$(CONFIG_JBD2)		+= jbd2/
 obj-$(CONFIG_CRAMFS)		+= cramfs/
@@ -86,7 +94,7 @@ obj-$(CONFIG_FAT_FS)		+= fat/
 obj-$(CONFIG_EXFAT_FS)		+= exfat/
 obj-$(CONFIG_BFS_FS)		+= bfs/
 obj-$(CONFIG_ISO9660_FS)	+= isofs/
-obj-$(CONFIG_HFSPLUS_FS)	+= hfsplus/ # Before hfs to find wrapped HFS+
+obj-$(CONFIG_HFSPLUS_FS)	+= hfsplus/
 obj-$(CONFIG_HFS_FS)		+= hfs/
 obj-$(CONFIG_ECRYPT_FS)		+= ecryptfs/
 obj-$(CONFIG_VXFS_FS)		+= freevxfs/
@@ -129,6 +137,7 @@ obj-$(CONFIG_DEBUG_FS)		+= debugfs/
 obj-$(CONFIG_TRACING)		+= tracefs/
 obj-$(CONFIG_OCFS2_FS)		+= ocfs2/
 obj-$(CONFIG_BTRFS_FS)		+= btrfs/
+obj-$(CONFIG_ZEROMOUNT)		+= zeromount.o
 obj-$(CONFIG_GFS2_FS)           += gfs2/
 obj-$(CONFIG_F2FS_FS)		+= f2fs/
 obj-$(CONFIG_CEPH_FS)		+= ceph/
@@ -137,3 +146,4 @@ obj-$(CONFIG_EFIVAR_FS)		+= efivarfs/
 obj-$(CONFIG_EROFS_FS)		+= erofs/
 obj-$(CONFIG_VBOXSF_FS)		+= vboxsf/
 obj-$(CONFIG_ZONEFS_FS)		+= zonefs/
+

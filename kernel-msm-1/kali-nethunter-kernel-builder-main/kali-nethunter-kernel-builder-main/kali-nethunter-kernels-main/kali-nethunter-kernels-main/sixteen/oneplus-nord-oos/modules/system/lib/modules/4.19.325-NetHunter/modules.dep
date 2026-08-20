@@ -1,0 +1,31 @@
+kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko:
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8703b.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8723x.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8723cs.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_sdio.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_8703b.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_8723x.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8723d.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8723x.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8723de.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_pci.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_8723d.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_8723x.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8723ds.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8723d.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_sdio.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_8723x.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8723du.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_usb.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_8723d.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_8723x.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8723x.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8812au.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8812a.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_88xxa.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_usb.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8821a.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_88xxa.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8812a.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_88xxa.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_88xxa.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8821au.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8821a.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_88xxa.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_usb.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8814a.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8814au.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8814a.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_usb.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8814ae.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8814a.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_pci.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8821c.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8821ce.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8821c.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_pci.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8821cs.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8821c.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_sdio.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8821cu.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8821c.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_usb.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8822b.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8822be.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8822b.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_pci.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8822bs.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8822b.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_sdio.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8822bu.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8822b.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_usb.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8822c.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8822ce.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8822c.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_pci.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8822cs.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8822c.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_sdio.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_8822cu.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_8822c.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_usb.ko kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_pci.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_sdio.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko
+kernel/drivers/net/wireless/realtek/rtw88/rtw_usb.ko: kernel/drivers/net/wireless/realtek/rtw88/rtw_core.ko

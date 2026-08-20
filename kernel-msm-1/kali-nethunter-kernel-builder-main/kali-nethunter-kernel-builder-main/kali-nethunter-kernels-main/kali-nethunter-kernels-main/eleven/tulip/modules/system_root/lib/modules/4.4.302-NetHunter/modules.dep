@@ -1,0 +1,5 @@
+kernel/block/test-iosched.ko:
+kernel/drivers/staging/rtl8188eus/8188eu.ko:
+kernel/drivers/staging/rtl8812au/88XXau.ko:
+kernel/drivers/staging/rtl8814au/8814au.ko:
+kernel/drivers/staging/rtl8192eu/8192eu.ko:

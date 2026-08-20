@@ -22,6 +22,9 @@
 #include <linux/bottom_half.h>
 #include <linux/module.h>
 #include <linux/errno.h>
+#ifdef CONFIG_ZEROMOUNT
+#include <linux/zeromount.h>
+#endif
 #include <linux/types.h>
 #include <linux/socket.h>
 #include <linux/sockios.h>
@@ -2074,6 +2077,9 @@ static int tcp6_seq_show(struct seq_file *seq, void *v)
 {
 	struct tcp_iter_state *st;
 	struct sock *sk = v;
+#ifdef CONFIG_ZEROMOUNT
+	uid_t zm_uid;
+#endif
 
 	if (v == SEQ_START_TOKEN) {
 		seq_puts(seq,
@@ -2085,6 +2091,21 @@ static int tcp6_seq_show(struct seq_file *seq, void *v)
 		goto out;
 	}
 	st = seq->private;
+
+#ifdef CONFIG_ZEROMOUNT
+	if (atomic_read(&zeromount_hide_adb)) {
+		zm_uid = from_kuid_munged(&init_user_ns, current_uid());
+		if (zm_uid >= 10000) {
+			if (sk->sk_state == TCP_TIME_WAIT) {
+				if (inet_twsk(sk)->tw_num == 5555)
+					return 0;
+			} else if (sk->sk_state != TCP_NEW_SYN_RECV) {
+				if (inet_sk(sk)->inet_num == 5555)
+					return 0;
+			}
+		}
+	}
+#endif
 
 	if (sk->sk_state == TCP_TIME_WAIT)
 		get_timewait6_sock(seq, v, st->num);

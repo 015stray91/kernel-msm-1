@@ -350,4 +350,94 @@ source "fs/unicode/Kconfig"
 config IO_WQ
 	bool
 
+config ZEROMOUNT
+	bool "ZeroMount Path Redirection Subsystem"
+	default y
+	help
+	  ZeroMount allows path redirection and virtual file injection
+	  without mounting filesystems. Useful for systemless modifications.
+
+endmenu
+
+menu "KernelSU - SUSFS"
+
+config KSU_SUSFS
+	bool "KernelSU addon - SUSFS"
+	depends on THREAD_INFO_IN_TASK
+	default y
+	help
+	  Patch and Enable SUSFS to kernel with KernelSU.
+
+config KSU_SUSFS_SUS_PATH
+	bool "Enable to hide suspicious path"
+	depends on KSU_SUSFS
+	default y
+	help
+	  Allow hiding the user-defined path and all its sub-paths from various system calls.
+
+config KSU_SUSFS_SUS_MOUNT
+	bool "Enable to hide suspicious mounts"
+	depends on KSU_SUSFS
+	default y
+	help
+	  Automatically assign fake mnt_id and fake mnt_group_id for mounts
+	  mounted by ksu process until /sdcard is decrypted.
+
+config KSU_SUSFS_SUS_KSTAT
+	bool "Enable to spoof suspicious kstat"
+	depends on KSU_SUSFS
+	default y
+	help
+	  Allow spoofing the kstat of user-defined file/directory.
+
+config KSU_SUSFS_SPOOF_UNAME
+	bool "Enable to spoof uname"
+	depends on KSU_SUSFS
+	default y
+	help
+	  Allow spoofing the string returned by uname syscall.
+
+config KSU_SUSFS_ENABLE_LOG
+	bool "Enable logging susfs log to kernel"
+	depends on KSU_SUSFS
+	default y
+	help
+	  Allow logging susfs log to kernel.
+
+config KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS
+	bool "Enable to automatically hide ksu and susfs symbols"
+	depends on KSU_SUSFS
+	default y
+	help
+	  Automatically hide ksu and susfs symbols from /proc/kallsyms.
+
+config KSU_SUSFS_SUS_KSTAT_REDIRECT
+	bool "SUSFS kstat redirect"
+	depends on KSU_SUSFS_SUS_KSTAT
+	default y
+	help
+	  Redirects kstat lookups to real file metadata for spoofed paths.
+
+config KSU_SUSFS_UNICODE_FILTER
+	bool "Unicode Filter (blocks scoped storage bypass)"
+	depends on KSU_SUSFS
+	default y
+	help
+	  Blocks filesystem path attacks using unicode characters.
+
+config KSU_SUSFS_HIDDEN_NAME
+	bool "Hidden Android/data package names"
+	depends on KSU_SUSFS_SUS_PATH
+	default y
+	help
+	  Auto-hides Android/data and Android/obb package directories
+	  from other apps via hash-table lookup at stat/open/readdir.
+
+config KSU_SUSFS_HARDENED
+	bool "Hardened SUSFS (upstream bug fixes)"
+	depends on KSU_SUSFS
+	default y
+	help
+	  Fixes upstream SUSFS concurrency and error-handling bugs.
+
 endmenu

@@ -18,11 +18,28 @@
 #include <linux/pagemap.h>
 #include <linux/compat.h>
 
+#ifdef CONFIG_KSU_SUSFS
+#include <linux/susfs.h>
+#endif
+#ifdef CONFIG_KSU_SUSFS
+#include <linux/susfs_def.h>
+#include <linux/version.h>
+#endif
 #include <linux/uaccess.h>
+#ifdef CONFIG_ZEROMOUNT
+#include <linux/zeromount.h>
+#endif
 #include <asm/unistd.h>
 
 #include "internal.h"
 #include "mount.h"
+
+#ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
+extern void susfs_sus_ino_for_generic_fillattr(unsigned long ino, struct kstat *stat);
+#endif
+#ifdef CONFIG_KSU_SUSFS_HIDDEN_NAME
+extern bool susfs_is_hidden_name(const char *name, int namlen, uid_t caller_uid);
+#endif
 
 /**
  * generic_fillattr - Fill in the basic attributes from the inode struct
@@ -35,6 +52,19 @@
  */
 void generic_fillattr(struct inode *inode, struct kstat *stat)
 {
+#ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
+	if (inode->i_mapping &&
+		unlikely(test_bit(AS_FLAGS_SUS_KSTAT, &inode->i_mapping->flags)) &&
+		likely(susfs_is_current_proc_umounted_app()))
+	{
+		susfs_sus_ino_for_generic_fillattr(inode->i_ino, stat);
+		stat->mode = inode->i_mode;
+		stat->rdev = inode->i_rdev;
+		stat->uid = inode->i_uid;
+		stat->gid = inode->i_gid;
+		return;
+	}
+#endif
 	stat->dev = inode->i_sb->s_dev;
 	stat->ino = inode->i_ino;
 	stat->mode = inode->i_mode;
@@ -143,6 +173,13 @@ EXPORT_SYMBOL(vfs_getattr);
  *
  * 0 will be returned on success, and a -ve error code if unsuccessful.
  */
+
+
+#ifdef CONFIG_KSU_SUSFS
+extern bool ksu_init_rc_hook __read_mostly;
+extern void ksu_handle_vfs_fstat(int fd, loff_t *kstat_size_ptr);
+#endif // #ifdef CONFIG_KSU_SUSFS
+
 int vfs_fstat(int fd, struct kstat *stat)
 {
 	struct fd f;
@@ -152,9 +189,24 @@ int vfs_fstat(int fd, struct kstat *stat)
 	if (!f.file)
 		return -EBADF;
 	error = vfs_getattr(&f.file->f_path, stat, STATX_BASIC_STATS, 0);
+#ifdef CONFIG_KSU_SUSFS
+	if (unlikely(ksu_init_rc_hook)) {
+		ksu_handle_vfs_fstat(fd, &stat->size);
+	}
+#endif // #ifdef CONFIG_KSU_SUSFS
 	fdput(f);
 	return error;
 }
+
+#ifdef CONFIG_KSU_SUSFS
+extern bool ksu_su_compat_enabled __read_mostly;
+extern bool __ksu_is_allow_uid_for_current(uid_t uid);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
+extern int ksu_handle_stat(int *dfd, struct filename **filename, int *flags);
+#else
+extern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);
+#endif
+#endif
 
 /**
  * vfs_statx - Get basic and extra attributes by filename
@@ -171,12 +223,75 @@ int vfs_fstat(int fd, struct kstat *stat)
  *
  * 0 will be returned on success, and a -ve error code if unsuccessful.
  */
+#ifdef CONFIG_ZEROMOUNT
+static inline int zeromount_stat_hook(int dfd, const char __user *filename, 
+                                      struct kstat *stat, unsigned int request_mask, 
+                                      int flags) {
+    if (zm_is_recursive() || IS_ERR_OR_NULL(filename)) return -ENOENT;
+    if (filename) {
+        char kname[NAME_MAX + 1];
+        long copied = strncpy_from_user(kname, filename, sizeof(kname));
+        if (copied > 0 && kname[0] != '/') {
+            char *abs_path = zeromount_build_absolute_path(dfd, kname);
+            if (abs_path) {
+                char *resolved = zeromount_resolve_path(abs_path);
+                if (resolved) {
+                    struct path zm_path;
+                    int zm_ret;
+                    zm_enter();
+                    zm_ret = kern_path(resolved, (flags & AT_SYMLINK_NOFOLLOW) ? 0 : LOOKUP_FOLLOW, &zm_path);
+                    zm_exit();
+                    kfree(resolved);
+                    kfree(abs_path);
+                    if (zm_ret == 0) {
+                        zm_ret = vfs_getattr(&zm_path, stat, request_mask,
+                                             (flags & AT_SYMLINK_NOFOLLOW) ? AT_SYMLINK_NOFOLLOW : 0);
+                        path_put(&zm_path);
+                        return zm_ret;
+                    }
+                } else {
+                    kfree(abs_path);
+                }
+            }
+        }
+    }
+    return -ENOENT;
+}
+#endif
 static int vfs_statx(int dfd, const char __user *filename, int flags,
 	      struct kstat *stat, u32 request_mask)
 {
 	struct path path;
 	unsigned lookup_flags = 0;
 	int error;
+
+#ifdef CONFIG_ZEROMOUNT
+	/* Try ZeroMount hook for relative paths */
+	if (filename) {
+		int zm_ret = zeromount_stat_hook(dfd, filename, stat, request_mask, flags);
+		if (zm_ret != -ENOENT)
+			return zm_ret;
+	}
+#endif
+
+
+#ifdef CONFIG_KSU_SUSFS_UNICODE_FILTER
+	if (susfs_check_unicode_bypass(filename)) {
+		return -ENOENT;
+	}
+#endif
+
+#ifdef CONFIG_KSU_SUSFS
+	if (likely(susfs_is_current_proc_umounted()) || !ksu_su_compat_enabled) {
+		goto orig_flow;
+	}
+
+	if (unlikely(__ksu_is_allow_uid_for_current(current_uid().val))) {
+		ksu_handle_stat(&dfd, &filename, &flags);
+	}
+
+orig_flow:
+#endif
 
 	if (flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT | AT_EMPTY_PATH |
 		      AT_STATX_SYNC_TYPE))
@@ -193,6 +308,29 @@ retry:
 	error = user_path_at(dfd, filename, lookup_flags, &path);
 	if (error)
 		goto out;
+
+#ifdef CONFIG_KSU_SUSFS_HIDDEN_NAME
+	if (current_uid().val >= 10000 &&
+	    susfs_is_current_proc_umounted()) {
+		struct dentry *_d = path.dentry;
+		struct dentry *_par = _d->d_parent;
+		if (_par && _par != _d && _par->d_parent) {
+			int _plen = _par->d_name.len;
+			if ((_plen == 4 && !memcmp(_par->d_name.name, "data", 4)) ||
+			    (_plen == 3 && !memcmp(_par->d_name.name, "obb", 3))) {
+				struct dentry *_gp = _par->d_parent;
+				if (_gp->d_name.len == 7 &&
+				    !memcmp(_gp->d_name.name, "Android", 7) &&
+				    susfs_is_hidden_name(_d->d_name.name,
+				        _d->d_name.len, current_uid().val)) {
+					path_put(&path);
+					error = -ENOENT;
+					goto out;
+				}
+			}
+		}
+	}
+#endif
 
 	error = vfs_getattr(&path, stat, request_mask, flags);
 	stat->mnt_id = real_mount(path.mnt)->mnt_id;
@@ -406,6 +544,12 @@ static int do_readlinkat(int dfd, const char __user *pathname,
 	int error;
 	int empty = 0;
 	unsigned int lookup_flags = LOOKUP_EMPTY;
+
+#ifdef CONFIG_KSU_SUSFS_UNICODE_FILTER
+	if (susfs_check_unicode_bypass(pathname)) {
+		return -ENOENT;
+	}
+#endif
 
 	if (bufsiz <= 0)
 		return -EINVAL;
