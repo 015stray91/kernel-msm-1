@@ -133,18 +133,19 @@ jobs:
           export LLVM=1
           export LLVM_IAS=1
 
-          echo "[1/4] Generating base config from ksu-nh.defconfig..."
-          make O=out ARCH=arm64 CC=clang LLVM=1 LLVM_IAS=1 \
-            CLANG_TRIPLE=aarch64-linux-gnu- \
-            ksu-nh.defconfig
+          mkdir -p out
 
-          echo "[2/4] Merging parrot_consolidate + moto-parrot + debug_moto_parrot_genevn..."
-          ./scripts/kconfig/merge_config.sh -m out/.config \
+          echo "[1/5] Listing available defconfigs..."
+          ls arch/arm64/configs/ | head -20
+
+          echo "[2/5] Merging base config stack via merge_config.sh..."
+          ./scripts/kconfig/merge_config.sh -m -O out \
+            arch/arm64/configs/ksu-nh.defconfig \
             arch/arm64/configs/vendor/parrot_consolidate.config \
             arch/arm64/configs/vendor/ext_config/moto-parrot.config \
             arch/arm64/configs/vendor/ext_config/debug_moto_parrot_genevn.config
 
-          echo "[3/4] Applying feature toggles..."
+          echo "[3/5] Applying feature toggles..."
           if [ "${{ inputs.add_overlayfs }}" = "true" ]; then
             echo "CONFIG_OVERLAY_FS=y" >> out/.config
             echo "CONFIG_SYSFS_OVERLAY=y" >> out/.config
@@ -169,12 +170,12 @@ jobs:
             echo "CONFIG_KPROBE_EVENTS=y" >> out/.config
           fi
 
-          echo "[4/4] Running olddefconfig to resolve dependencies..."
+          echo "[4/5] Running olddefconfig to resolve dependencies..."
           make O=out ARCH=arm64 CC=clang LLVM=1 LLVM_IAS=1 \
             CLANG_TRIPLE=aarch64-linux-gnu- \
             olddefconfig
 
-          echo "=== Config complete ==="
+          echo "[5/5] Config complete ==="
           wc -l out/.config
 
           echo "=== Verifying critical flags preserved ==="
