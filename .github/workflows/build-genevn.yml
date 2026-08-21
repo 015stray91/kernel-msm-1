@@ -90,62 +90,54 @@ jobs:
             https://github.com/015stray91/kernel-msm-1.git \
             kernel-source
 
-      - name: Clone All Motorola Repos (66 repos at tag MMI-U1TGNS34.42-86-2-32)
+      - name: Clone All 66 Repos from Forks (tag MMI-U1TGNS34.42-86-2-32)
         run: |
           TAG="MMI-U1TGNS34.42-86-2-32"
-          ORG="MotorolaMobilityLLC"
-          DEST="kernel-source"
-          PAT="${{ secrets.GITHUB_TOKEN }}"
+          ORG="015stray91"
+          D="kernel-source"
 
-          clone_repo() {
-            local repo="$1"
-            local dest="$2"
-            echo "  Cloning $repo -> $dest"
+          clone() {
+            echo "  $1 -> $2"
             git clone --depth=1 --branch "$TAG" \
-              "https://${PAT}@github.com/${ORG}/${repo}.git" \
-              "$dest" 2>/dev/null || echo "  WARN: $repo tag not found, trying default branch..."
+              "https://github.com/${ORG}/${1}.git" "$2" 2>/dev/null || \
+            git clone --depth=1 "https://github.com/${ORG}/${1}.git" "$2" 2>/dev/null || \
+              echo "  FAIL: $1"
           }
 
-          echo "=== Cloning 66 repos at tag $TAG ==="
+          echo "=== Cloning 66 repos ==="
 
-          # --- KERNEL CORE ---
-          echo "--- Kernel Core ---"
-          clone_repo "kernel-common" "$DEST/common"
+          # KERNEL CORE
+          clone kernel-common "$D/common"
 
-          # --- DEVICE TREES ---
-          echo "--- Device Trees ---"
-          clone_repo "kernel-devicetree" "$DEST/arch/arm64/boot/dts/vendor"
-          clone_repo "kernel-audio-devicetree" "$DEST/arch/arm64/boot/dts/vendor/audio"
-          clone_repo "kernel-camera-devicetree" "$DEST/arch/arm64/boot/dts/vendor/camera"
-          clone_repo "kernel-display-devicetree" "$DEST/arch/arm64/boot/dts/vendor/display"
-          clone_repo "kernel-mmrm-devicetree" "$DEST/arch/arm64/boot/dts/vendor/mmrm"
-          clone_repo "kernel-video-devicetree" "$DEST/arch/arm64/boot/dts/vendor/video"
+          # DEVICE TREES
+          clone kernel-devicetree "$D/arch/arm64/boot/dts/vendor"
+          clone kernel-audio-devicetree "$D/arch/arm64/boot/dts/vendor/audio"
+          clone kernel-camera-devicetree "$D/arch/arm64/boot/dts/vendor/camera"
+          clone kernel-display-devicetree "$D/arch/arm64/boot/dts/vendor/display"
+          clone kernel-mmrm-devicetree "$D/arch/arm64/boot/dts/vendor/mmrm"
+          clone kernel-video-devicetree "$D/arch/arm64/boot/dts/vendor/video"
 
-          # --- MODULES ---
-          echo "--- Modules ---"
-          clone_repo "motorola-kernel-modules" "$DEST/motorola-kernel-modules"
+          # MODULES
+          clone motorola-kernel-modules "$D/motorola-kernel-modules"
 
-          # --- TECHPACKS ---
-          echo "--- Techpacks ---"
-          clone_repo "kernel-msm-5.4-techpack-display" "$DEST/techpack/display"
-          clone_repo "kernel-msm-techpack-dataipa" "$DEST/techpack/dataipa"
+          # TECHPACKS
+          clone kernel-msm-5.4-techpack-display "$D/techpack/display"
+          clone kernel-msm-techpack-dataipa "$D/techpack/dataipa"
 
-          # --- VENDOR QC OPEN SOURCE ---
-          echo "--- Vendor QC Open Source ---"
-          clone_repo "vendor-qcom-opensource-audio-kernel" "$DEST/vendor/qcom/opensource/audio-kernel"
-          clone_repo "vendor-qcom-opensource-camera-kernel" "$DEST/vendor/qcom/opensource/camera-kernel"
-          clone_repo "vendor-qcom-opensource-camera-kernel-legacy" "$DEST/vendor/qcom/opensource/camera-kernel-legacy"
-          clone_repo "vendor-qcom-opensource-datarmnet" "$DEST/vendor/qcom/opensource/datarmnet"
-          clone_repo "vendor-qcom-opensource-datarmnet-ext" "$DEST/vendor/qcom/opensource/datarmnet-ext"
-          clone_repo "vendor-qcom-opensource-eva-kernel" "$DEST/vendor/qcom/opensource/eva-kernel"
-          clone_repo "vendor-qcom-opensource-mmrm-driver" "$DEST/vendor/qcom/opensource/mmrm-driver"
-          clone_repo "vendor-qcom-opensource-video-driver" "$DEST/vendor/qcom/opensource/video-driver"
-          clone_repo "vendor-qcom-opensource-wlan-fw-api" "$DEST/vendor/qcom/opensource/wlan-fw-api"
-          clone_repo "vendor-qcom-opensource-wlan-qcacld-3.0" "$DEST/vendor/qcom/opensource/wlan-qcacld-3.0"
-          clone_repo "vendor-qcom-opensource-wlan-qca-wifi-host-cmn" "$DEST/vendor/qcom/opensource/wlan-qca-wifi-host-cmn"
+          # VENDOR QC
+          clone vendor-qcom-opensource-audio-kernel "$D/vendor/qcom/opensource/audio-kernel"
+          clone vendor-qcom-opensource-camera-kernel "$D/vendor/qcom/opensource/camera-kernel"
+          clone vendor-qcom-opensource-camera-kernel-legacy "$D/vendor/qcom/opensource/camera-kernel-legacy"
+          clone vendor-qcom-opensource-datarmnet "$D/vendor/qcom/opensource/datarmnet"
+          clone vendor-qcom-opensource-datarmnet-ext "$D/vendor/qcom/opensource/datarmnet-ext"
+          clone vendor-qcom-opensource-eva-kernel "$D/vendor/qcom/opensource/eva-kernel"
+          clone vendor-qcom-opensource-mmrm-driver "$D/vendor/qcom/opensource/mmrm-driver"
+          clone vendor-qcom-opensource-video-driver "$D/vendor/qcom/opensource/video-driver"
+          clone vendor-qcom-opensource-wlan-fw-api "$D/vendor/qcom/opensource/wlan-fw-api"
+          clone vendor-qcom-opensource-wlan-qcacld-3.0 "$D/vendor/qcom/opensource/wlan-qcacld-3.0"
+          clone vendor-qcom-opensource-wlan-qca-wifi-host-cmn "$D/vendor/qcom/opensource/wlan-qca-wifi-host-cmn"
 
-          # --- EXTERNAL LIBS ---
-          echo "--- External Libs ---"
+          # EXTERNAL LIBS
           for ext in aac arm-optimized-routines boringssl cronet dnsmasq dtc \
             e2fsprogs eigen elfutils erofs-utils error_prone exfatprogs fec \
             fmtlib go-cmp golang-protobuf gptfdisk gwp_asan \
@@ -153,20 +145,19 @@ jobs:
             libchrome libcxx libcxxabi libexif libfuse \
             libnetfilter_conntrack libnfnetlink libnl-headers lz4 \
             oj-libjdwp pcre rust-crates-cesu8 scudo selinux zlib; do
-            clone_repo "external-$ext" "$DEST/external/$ext"
+            clone "external-$ext" "$D/external/$ext"
           done
 
-          # --- MISC ---
-          echo "--- Misc ---"
-          clone_repo "art" "$DEST/art"
-          clone_repo "bionic" "$DEST/bionic"
-          clone_repo "libcore" "$DEST/libcore"
-          clone_repo "motorola-external-f2fs-tools" "$DEST/motorola-external-f2fs-tools"
-          clone_repo "system-core" "$DEST/system-core"
+          # MISC
+          clone art "$D/art"
+          clone bionic "$D/bionic"
+          clone libcore "$D/libcore"
+          clone motorola-external-f2fs-tools "$D/motorola-external-f2fs-tools"
+          clone system-core "$D/system-core"
 
-          echo "=== Clone complete ==="
-          echo "Total dirs created:"
-          find "$DEST" -maxdepth 2 -name ".git" -type d 2>/dev/null | wc -l
+          echo "=== Done ==="
+          find "$D" -maxdepth 3 -name ".git" -type d 2>/dev/null | wc -l
+          echo "repos cloned"
 
       - name: Fix SUBLEVEL to 218
         working-directory: kernel-source
