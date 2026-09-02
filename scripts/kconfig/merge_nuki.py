@@ -39,97 +39,78 @@ def key_of(line):
     return None
 
 def merge(base_paths, middle_paths, ending_paths, out_path):
-    # Collect base keys as protected (skip missing)
-    base_entries=[]
+    # Pure UNION merge: every flag from every file stays, nothing killed
+    # =y wins over =m wins over =n (is not set) for the same key
+    # No file is "sacred" - master list of all CONFIGs, no consolidation
+
+    # Collect all entries: (raw, key, value) from base, middle, ending - in order
+    all_entries = []
+    seen = {}  # key -> last raw line
+    order = []  # [(key, raw)] in order of LAST occurrence (preserves input order)
+
+    def add_file(path):
+        if not pathlib.Path(path).exists():
+            print(f"merge_nuki: skip missing {path}", file=sys.stderr)
+            return
+        for raw, k, v in parse_config(path):
+            if k is None:
+                # comment/blank - always add
+                order.append((None, raw))
+            else:
+                if k in seen:
+                    # remove old occurrence
+                    order[:] = [(kk, rr) for kk, rr in order if kk != k]
+                seen[k] = raw
+                order.append((k, raw))
+
     for p in base_paths:
-        if not pathlib.Path(p).exists():
-            print(f"merge_nuki: skip missing base {p}", file=sys.stderr)
-            continue
-        base_entries.extend(parse_config(p))
-    # Map base key -> final line (last occurrence within base files, deduped)
-    base_map={}
-    base_order=[]
-    for raw,k,v in base_entries:
-        if k:
-            if k in base_map:
-                # remove previous
-                base_order = [x for x in base_order if x[0]!=k]
-            base_map[k]=raw
-            base_order.append((k,raw))
-        else:
-            base_order.append((None,raw))
-    # dedup base_order for output later, but keep as base_map for protection
-
-    # Middle: last-wins among themselves, but skip if key is in base_map and middle tries to set to n when base is y/m
-    middle_map={}
-    middle_order=[]
+        add_file(p)
     for p in middle_paths:
-        if not pathlib.Path(p).exists():
-            print(f"merge_nuki: skip missing middle {p}", file=sys.stderr)
-            continue
-        for raw,k,v in parse_config(p):
-            if not k:
-                middle_order.append((None,raw))
-                continue
-            # if already in middle_map, remove previous middle occurrence
-            if k in middle_map:
-                middle_order = [x for x in middle_order if x[0]!=k]
-            middle_map[k]=raw
-            middle_order.append((k,raw))
-
-    # Build intermediate: base protected + middle that doesn't clobber base
-    # For each middle key, if it's in base_map, compare: if base is y/m and middle is n (is not set), skip middle (keep base)
-    # Otherwise, if middle is y/m and base is y/m, middle is same so skip (keep base) - base wins anyway
-    # If middle introduces new key not in base, keep it
-    # If middle has same key but different non-n value, keep base (non-negotiable)
-    final_map=dict(base_map)
-    final_order=list(base_order)  # copy
-
-    for k,raw in middle_order:
-        if k is None:
-            final_order.append((k,raw))
-            continue
-        if k in base_map:
-            # base is sacred: ignore middle's attempt to change it
-            # We keep base_map[k], do not overwrite
-            continue
-        else:
-            # new key from middle: add, but dedup if already added from earlier middle
-            if k in final_map:
-                # remove previous occurrence from final_order if it was from middle
-                final_order = [x for x in final_order if x[0]!=k]
-            final_map[k]=raw
-            final_order.append((k,raw))
-
-    # Ending: unconditional last-wins, overwrites everything
+        add_file(p)
     for p in ending_paths:
-        if not pathlib.Path(p).exists():
-            print(f"merge_nuki: skip missing ending {p}", file=sys.stderr)
-            continue
-        for raw,k,v in parse_config(p):
-            if not k:
-                final_order.append((k,raw))
-                continue
-            if k in final_map:
-                final_order = [x for x in final_order if x[0]!=k]
-            final_map[k]=raw
-            final_order.append((k,raw))
+        add_file(p)
 
-    # Rebuild output: iterate final_order, skip None keys, emit raw lines
-    # Need to dedup final_order to last occurrence already done, now emit
-    seen=set()
-    out_lines=[]
-    # We need to emit in order of last occurrence: final_order already is in order of last occurrence due to removals
-    for k,raw in final_order:
-        if k and k in seen:
+    # After collecting: for each key, the LAST occurrence wins (=y > =m > =n)
+    # But we want PURE UNION - if a flag appears in multiple files, =y stays, even if a later file has =n
+    # To do "all of them go together" pure union: =y > =m > =n per key
+    final_map = {}
+    final_order = []
+    key_promoted = {}  # key -> (promoted_raw, original_position) so we can keep input order
+
+    # First pass: collect highest-value per key (=y > =m > =n)
+    priority = {'y': 3, 'm': 2, 'n': 1, '': 0}
+    for k, raw in order:
+        if k is None:
             continue
-        if k:
-            seen.add(k)
-        out_lines.append(raw)
+        m = re.match(r'^(CONFIG_[A-Za-z0-9_]+)=(.*)', raw)
+        if m:
+            val = m.group(2).strip()
+        else:
+            m2 = re.match(r'^#\s*(CONFIG_[A-Za-z0-9_]+)\s+is not set', raw)
+            val = 'n' if m2 else ''
+        cur = final_map.get(k, ('', -1))
+        if val and priority.get(val, 0) >= priority.get(cur[0], 0):
+            final_map[k] = (val, raw)
+        elif k not in final_map:
+            final_map[k] = (val, raw)
+
+    # Second pass: emit in input order (last occurrence per key keeps position)
+    seen_keys = set()
+    out_lines = []
+    for k, raw in order:
+        if k is None:
+            out_lines.append(raw)
+            continue
+        if k in seen_keys:
+            continue
+        seen_keys.add(k)
+        # Use the highest-priority version (=y > =m > =n)
+        out_lines.append(final_map[k][1])
 
     pathlib.Path(out_path).parent.mkdir(parents=True, exist_ok=True)
-    pathlib.Path(out_path).write_text("\n".join(out_lines)+"\n")
-    print(f"merge_nuki: base={len(base_paths)} middle={len(middle_paths)} ending={len(ending_paths)} -> {len([k for k,_ in final_order if k])} CONFIGs, {len(out_lines)} lines -> {out_path}")
+    pathlib.Path(out_path).write_text("\n".join(out_lines) + "\n")
+    total = len([k for k in final_map])
+    print(f"merge_nuki: union base={len(base_paths)} middle={len(middle_paths)} ending={len(ending_paths)} -> {total} unique CONFIGs, {len(out_lines)} lines -> {out_path}")
 
 if __name__=="__main__":
     ap=argparse.ArgumentParser()
