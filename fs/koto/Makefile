@@ -32,9 +32,13 @@ kpm_eud-outoftree-emb-objs := kpm_eud_outoftree-Installemb.o
 # Upstream
 kpm_eud-upstrm-emb-objs := kpm_eud_upstrm-Install-emb.o
 
-obj-m += kpm_eud-hiddnobj-test.o
-obj-m += kpm_eud-hiddnobj-emb.o
-obj-m += kpm_eud-infusdobj-test.o
-obj-m += kpm_eud-infusdobj-emb.o
-obj-m += kpm_eud-outoftree-emb.o
-obj-m += kpm_eud-upstrm-emb.o
+# NUKI Colonel: only build the 4 built-ins (VFS twin, hidden objects, KPM EUD engine, Koto core)
+# The 6 matrix variants (hiddnobj/infusdobj/outoftree/upstrm x test/emb) are for the debos
+# Sage iterate stage, NOT for the production NUKI Colonel boot image
+# Uncomment below to enable matrix variants for debos stage
+# obj-m += kpm_eud-hiddnobj-test.o
+# obj-m += kpm_eud-hiddnobj-emb.o
+# obj-m += kpm_eud-infusdobj-test.o
+# obj-m += kpm_eud-infusdobj-emb.o
+# obj-m += kpm_eud-outoftree-emb.o
+# obj-m += kpm_eud-upstrm-emb.o
