@@ -86,3 +86,10 @@ CONFIG_GENERIC_TRACING=y
 CONFIG_TRACEPOINTS=y
 CONFIG_ANDROID_VENDOR_HOOKS=y
 # CONFIG_WERROR is not set
+
+# NUKI Colonel: GKI 1.0 device, not 2.0. abi_symbollist.raw path from
+# GKI 2.0 AOSP build (/mnt/disks/build-disk/src/android/common-*) does
+# not exist on CI runner. Colonel is fully curated, no need to trim.
+# Disabled in sacred base so it overrides the =y from defconfig / debug-parrot-genevn.
+# CONFIG_TRIM_UNUSED_KSYMS is not set
+# CONFIG_UNUSED_KSYMS_WHITELIST is not set
