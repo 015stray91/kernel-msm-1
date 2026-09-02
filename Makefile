@@ -3,7 +3,28 @@ VERSION = 5
 PATCHLEVEL = 10
 SUBLEVEL = 240
 EXTRAVERSION =
-NAME = Dare mighty things
+NAME = AnyRealm NUKI
+
+# AnyRealm NUKI - Snapdragon clang-r416183b (LLVM 12) + GCC
+# In-tree toolchain: tools/toolchains/snapdragon-toolchain/
+# Decoupled from upstream - this Makefile is for our cumulative build only
+SD_TOOLCHAIN := tools/toolchains/snapdragon-toolchain
+SD_CLANG := $(PWD)/$(SD_TOOLCHAIN)/clang-r416183b/bin
+SD_GCC := $(PWD)/$(SD_TOOLCHAIN)/gcc/linux-x86/aarch64/gcc-linaro-7.5.0/bin
+CC := $(SD_CLANG)/clang
+LD := $(SD_CLANG)/ld.lld
+AR := $(SD_CLANG)/llvm-ar
+NM := $(SD_CLANG)/llvm-nm
+OBJCOPY := $(SD_CLANG)/llvm-objcopy
+OBJDUMP := $(SD_CLANG)/llvm-objdump
+STRIP := $(SD_CLANG)/llvm-strip
+CLANG_TRIPLE := aarch64-linux-gnu-
+CROSS_COMPILE := $(SD_GCC)/aarch64-linux-gnu-
+HOSTCC := gcc
+HOSTCXX := g++
+LLVM := 1
+LLVM_IAS := 1
+export CC LD AR NM OBJCOPY OBJDUMP STRIP CROSS_COMPILE CLANG_TRIPLE LLVM LLVM_IAS HOSTCC HOSTCXX
 
 # indicate that change "Kbuild: Support nested composite objects" is
 # present in the kernel so that out-of-tree modules can act upon it
