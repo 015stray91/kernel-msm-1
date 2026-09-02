@@ -24,7 +24,7 @@ HOSTCC := gcc
 HOSTCXX := g++
 LLVM := 1
 LLVM_IAS := 1
-export CC LD AR NM OBJCOPY OBJDUMP STRIP CROSS_COMPILE CLANG_TRIPLE LLVM LLVM_IAS HOSTCC HOSTCXX
+export CC LD AR NM OBJCOPY OBJDUMP STRIP CROSS_COMPILE CLANG_TRIPLE LLVM LLVM_IAS
 
 # indicate that change "Kbuild: Support nested composite objects" is
 # present in the kernel so that out-of-tree modules can act upon it
@@ -453,13 +453,10 @@ HOST_LFS_CFLAGS := $(shell getconf LFS_CFLAGS 2>/dev/null)
 HOST_LFS_LDFLAGS := $(shell getconf LFS_LDFLAGS 2>/dev/null)
 HOST_LFS_LIBS := $(shell getconf LFS_LIBS 2>/dev/null)
 
-ifneq ($(LLVM),)
-HOSTCC	= clang
-HOSTCXX	= clang++
-else
+# AnyRealm: always use system gcc/g++ for host programs (snapdragon clang can't
+# find system headers for host tools like scripts/sorttable, selinux/genheaders)
 HOSTCC	= gcc
 HOSTCXX	= g++
-endif
 
 KBUILD_USERHOSTCFLAGS := -Wall -Wmissing-prototypes -Wstrict-prototypes \
 			 -O2 -fomit-frame-pointer -std=gnu89
