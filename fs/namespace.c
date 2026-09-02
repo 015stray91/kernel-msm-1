@@ -30,6 +30,9 @@
 #include <uapi/linux/mount.h>
 #include <linux/fs_context.h>
 #include <linux/shmem_fs.h>
+#ifndef DEFAULT_UNSHARE_KSU_MNT_ID
+#define DEFAULT_UNSHARE_KSU_MNT_ID 100000
+#endif
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
 #include <linux/susfs_def.h>
 #endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT

@@ -80,10 +80,6 @@ static inline bool susfs_starts_with(const char *str, const char *prefix) {
     return true;
 }
 
-static inline bool susfs_is_current_proc_umounted_app(void) {
-	return test_ti_thread_flag(&current->thread_info, TIF_PROC_UMOUNTED);
-}
-
 #ifdef CONFIG_ZEROMOUNT
 extern bool zeromount_is_uid_blocked(uid_t uid);
 static inline bool susfs_is_uid_zeromount_excluded(uid_t uid) {
