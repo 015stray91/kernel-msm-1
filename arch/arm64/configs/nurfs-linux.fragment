@@ -34,6 +34,11 @@ CONFIG_SQUASHFS=y
 CONFIG_ANDROID_BINDER_IPC=y
 CONFIG_ASHMEM=y
 CONFIG_ZRAM=y
+# Disable ANDROID_SYMLINKS - hardcodes /mnt/disks/build-disk/.../android/common path from AOSP build server
+# That path doesn't exist on CI runner - causes abi_symbollist.raw whitelist not found
+CONFIG_ANDROID_SYMLINKS=n
+# Disable MODVERSIONS - depends on abi_symbollist.raw from GKI android/common tree
+CONFIG_MODVERSIONS=n
 # Systemd + Debian image builder (DIB) hard requirements
 # Kernel image (Colonel) -> LZ4 (fast boot, vendor_boot ramdisk expects lz4)
 CONFIG_KERNEL_LZ4=y
