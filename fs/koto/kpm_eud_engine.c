@@ -20,7 +20,7 @@
 #include <linux/slab.h>
 #include <linux/ktime.h>
 
-#define EUD_TRUST_MAGIC 0x534849535549ULL /* "SHISUI" validation handle */
+#define EUD_TRUST_MAGIC 0x534849535549ULL /* "SHISUI" validation handle - pragma: allowlist secret - gitleaks:allow */
 
 struct kpm_telemetry_event {
     u64 register_time;
