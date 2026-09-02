@@ -73,21 +73,15 @@ jobs:
           chmod +x deploy_lz4.sh nethunter_hook.sh
           ./deploy_lz4.sh
 
-      - name: Merge NUKI Config (GKI 1.0 chain + NURFS Linux + KSU/SUSFS)
+      - name: Merge NUKI Config (staged - base sacred, middle staged, ending final)
         run: |
-          echo "=== NUKI merge: ksu-nh.defconfig is already deduped final, re-merging to guarantee last-wins ==="
+          echo "=== NUKI staged merge: base=ksu-nh sacred, middle stages, ending=debug_moto+nurfs final ==="
           mkdir -p out
-          # ksu-nh.defconfig already contains consolidate + defconfig.fragment + sm6450 + debug_genevn + nurfs-linux (deduped)
-          # We run merge_config again with the same stack so any local edit in fragments wins in CI as well.
-          ./scripts/kconfig/merge_config.sh -m -O out \
-            arch/arm64/configs/ksu-nh.defconfig \
-            arch/arm64/configs/consolidate.fragment \
-            arch/arm64/configs/defconfig.fragment \
-            arch/arm64/configs/vendor/moto-parrot-sm6450.config \
-            arch/arm64/configs/vendor/ext_config/debug-parrot-genevn.config \
-            arch/arm64/configs/vendor/ext_config/debug_moto_parrot_genevn.config \
-            arch/arm64/configs/nurfs-linux.fragment || \
-          cp arch/arm64/configs/ksu-nh.defconfig out/.config
+          python3 scripts/kconfig/merge_nuki.py \
+            --base arch/arm64/configs/ksu-nh.defconfig \
+            --middle arch/arm64/configs/consolidate.fragment arch/arm64/configs/defconfig.fragment arch/arm64/configs/vendor/moto-parrot-sm6450.config arch/arm64/configs/vendor/ext_config/debug-parrot-genevn.config \
+            --ending arch/arm64/configs/vendor/ext_config/debug_moto_parrot_genevn.config arch/arm64/configs/nurfs-linux.fragment \
+            -o out/.config || cp arch/arm64/configs/ksu-nh.defconfig out/.config
 
           make O=out ARCH=arm64 olddefconfig
           echo "=== Config lines ==="; wc -l out/.config

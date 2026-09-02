@@ -8,16 +8,14 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-echo "=== NUKI merge: ksu-nh.defconfig + fragments -> .config ==="
-./scripts/kconfig/merge_config.sh -m \
-  arch/arm64/configs/ksu-nh.defconfig \
-  arch/arm64/configs/consolidate.fragment \
-  arch/arm64/configs/defconfig.fragment \
-  arch/arm64/configs/vendor/moto-parrot-sm6450.config \
-  arch/arm64/configs/vendor/ext_config/debug-parrot-genevn.config \
-  arch/arm64/configs/vendor/ext_config/debug_moto_parrot_genevn.config \
-  arch/arm64/configs/nurfs-linux.fragment \
-  2>&1 | tail -20
+echo "=== NUKI staged merge: base sacred, middle staged, ending final ==="
+python3 scripts/kconfig/merge_nuki.py \
+  --base arch/arm64/configs/ksu-nh.defconfig \
+  --middle arch/arm64/configs/consolidate.fragment arch/arm64/configs/defconfig.fragment arch/arm64/configs/vendor/moto-parrot-sm6450.config arch/arm64/configs/vendor/ext_config/debug-parrot-genevn.config \
+  --ending arch/arm64/configs/vendor/ext_config/debug_moto_parrot_genevn.config arch/arm64/configs/nurfs-linux.fragment \
+  -o .config
+mkdir -p out && cp .config out/.config
+echo "NUKI merge done: $(grep -c "^CONFIG_" .config) CONFIGs, $(wc -l < .config) lines"
 
 if [ -f "deploy_lz4.sh" ]; then
   chmod +x deploy_lz4.sh
