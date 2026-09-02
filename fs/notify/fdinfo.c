@@ -90,7 +90,7 @@ static void show_mark_fhandle(struct seq_file *m, struct inode *inode)
 static void inotify_fdinfo(struct seq_file *m, struct fsnotify_mark *mark, struct file *file)
 #else
 static void inotify_fdinfo(struct seq_file *m, struct fsnotify_mark *mark)
-#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
+#endif
 {
 	struct inotify_inode_mark *inode_mark;
 	struct inode *inode;
@@ -154,7 +154,7 @@ void inotify_show_fdinfo(struct seq_file *m, struct file *f)
 
 #ifdef CONFIG_FANOTIFY
 
-static void fanotify_fdinfo(struct seq_file *m, struct fsnotify_mark *mark)
+static void fanotify_fdinfo(struct seq_file *m, struct fsnotify_mark *mark, struct file *file)
 {
 	unsigned int mflags = 0;
 	struct inode *inode;
