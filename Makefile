@@ -470,6 +470,18 @@ KBUILD_HOSTLDLIBS   := $(HOST_LFS_LIBS) $(HOSTLDLIBS)
 
 # Make variables (CC, etc...)
 CPP		= $(CC) -E
+# AnyRealm trap fix: if SD_CLANG is set, use absolute paths. Only fall back to
+# bare command names when SD_CLANG wasn't set (i.e. upstream kernel build).
+ifdef SD_CLANG
+CC		= $(SD_CLANG)/clang
+LD		= $(SD_CLANG)/ld.lld
+AR		= $(SD_CLANG)/llvm-ar
+NM		= $(SD_CLANG)/llvm-nm
+OBJCOPY		= $(SD_CLANG)/llvm-objcopy
+OBJDUMP		= $(SD_CLANG)/llvm-objdump
+READELF		= $(SD_CLANG)/llvm-readelf
+STRIP		= $(SD_CLANG)/llvm-strip
+else
 ifneq ($(LLVM),)
 CC		= clang
 LD		= ld.lld
@@ -488,6 +500,7 @@ OBJCOPY		= $(CROSS_COMPILE)objcopy
 OBJDUMP		= $(CROSS_COMPILE)objdump
 READELF		= $(CROSS_COMPILE)readelf
 STRIP		= $(CROSS_COMPILE)strip
+endif
 endif
 PAHOLE		= pahole
 RESOLVE_BTFIDS	= $(objtree)/tools/bpf/resolve_btfids/resolve_btfids
