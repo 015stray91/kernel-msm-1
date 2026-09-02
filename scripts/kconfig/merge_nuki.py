@@ -40,8 +40,9 @@ def key_of(line):
 
 def merge(base_paths, middle_paths, ending_paths, out_path):
     # Pure UNION merge: every flag from every file stays, nothing killed
-    # =y wins over =m wins over =n (is not set) for the same key
+    # =y wins over =m wins over =n for the same key
     # No file is "sacred" - master list of all CONFIGs, no consolidation
+    # For curated sets: every file's flags get added, conflicts resolved by priority y>m>n
 
     # Collect all entries: (raw, key, value) from base, middle, ending - in order
     all_entries = []
@@ -70,29 +71,16 @@ def merge(base_paths, middle_paths, ending_paths, out_path):
     for p in ending_paths:
         add_file(p)
 
-    # After collecting: for each key, the LAST occurrence wins (=y > =m > =n)
-    # But we want PURE UNION - if a flag appears in multiple files, =y stays, even if a later file has =n
-    # To do "all of them go together" pure union: =y > =m > =n per key
+    # Pure union: for each key, the LAST occurrence in input order wins
+    # This is the "master list" pattern - curated files don't overlap
+    # If they do overlap, the later file wins (=y/m/n from the later file)
     final_map = {}
     final_order = []
-    key_promoted = {}  # key -> (promoted_raw, original_position) so we can keep input order
 
-    # First pass: collect highest-value per key (=y > =m > =n)
-    priority = {'y': 3, 'm': 2, 'n': 1, '': 0}
     for k, raw in order:
         if k is None:
             continue
-        m = re.match(r'^(CONFIG_[A-Za-z0-9_]+)=(.*)', raw)
-        if m:
-            val = m.group(2).strip()
-        else:
-            m2 = re.match(r'^#\s*(CONFIG_[A-Za-z0-9_]+)\s+is not set', raw)
-            val = 'n' if m2 else ''
-        cur = final_map.get(k, ('', -1))
-        if val and priority.get(val, 0) >= priority.get(cur[0], 0):
-            final_map[k] = (val, raw)
-        elif k not in final_map:
-            final_map[k] = (val, raw)
+        final_map[k] = raw
 
     # Second pass: emit in input order (last occurrence per key keeps position)
     seen_keys = set()
@@ -104,13 +92,12 @@ def merge(base_paths, middle_paths, ending_paths, out_path):
         if k in seen_keys:
             continue
         seen_keys.add(k)
-        # Use the highest-priority version (=y > =m > =n)
-        out_lines.append(final_map[k][1])
+        out_lines.append(final_map[k])
 
     pathlib.Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     pathlib.Path(out_path).write_text("\n".join(out_lines) + "\n")
-    total = len([k for k in final_map])
-    print(f"merge_nuki: union base={len(base_paths)} middle={len(middle_paths)} ending={len(ending_paths)} -> {total} unique CONFIGs, {len(out_lines)} lines -> {out_path}")
+    total = len(final_map)
+    print(f"merge_nuki: pure-union base={len(base_paths)} middle={len(middle_paths)} ending={len(ending_paths)} -> {total} unique CONFIGs, {len(out_lines)} lines -> {out_path}")
 
 if __name__=="__main__":
     ap=argparse.ArgumentParser()
