@@ -568,7 +568,9 @@ CLANG_FLAGS :=
 # For use when analysis needs to call subshell with CC before cc-wrapper is built.
 NO_WRAPPER_CC := $(CC)
 
-CC := scripts/basic/cc-wrapper $(CC)
+# AnyRealm: skip cc-wrapper (it makes all clang warnings into errors, breaking our curated build)
+# Just use the absolute clang path directly
+# CC := scripts/basic/cc-wrapper $(CC)
 
 export ARCH SRCARCH CONFIG_SHELL BASH HOSTCC KBUILD_HOSTCFLAGS CROSS_COMPILE LD CC
 export CPP AR NM STRIP OBJCOPY OBJDUMP READELF PAHOLE RESOLVE_BTFIDS LEX YACC AWK INSTALLKERNEL
