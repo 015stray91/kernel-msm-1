@@ -8,7 +8,7 @@ NAME = AnyRealm NUKI
 # AnyRealm NUKI - Snapdragon clang-r416183b (LLVM 12) + GCC
 # In-tree toolchain: tools/toolchains/snapdragon-toolchain/
 # Decoupled from upstream - this Makefile is for our cumulative build only
-SD_TOOLCHAIN := $(CURDIR)/tools/toolchains/snapdragon-toolchain
+SD_TOOLCHAIN := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))/tools/toolchains/snapdragon-toolchain
 SD_CLANG := $(SD_TOOLCHAIN)/clang-r416183b/bin
 SD_GCC := $(SD_TOOLCHAIN)/gcc/linux-x86/aarch64/gcc-linaro-7.5.0/bin
 CC := $(SD_CLANG)/clang
