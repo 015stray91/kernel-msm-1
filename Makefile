@@ -24,7 +24,7 @@ HOSTCC := gcc
 HOSTCXX := g++
 LLVM := 1
 LLVM_IAS := 1
-export CC LD AR NM OBJCOPY OBJDUMP STRIP CROSS_COMPILE CLANG_TRIPLE LLVM LLVM_IAS
+export CC LD AR NM OBJCOPY OBJDUMP STRIP CROSS_COMPILE CLANG_TRIPLE LLVM LLVM_IAS HOSTCC HOSTCXX
 
 # indicate that change "Kbuild: Support nested composite objects" is
 # present in the kernel so that out-of-tree modules can act upon it
