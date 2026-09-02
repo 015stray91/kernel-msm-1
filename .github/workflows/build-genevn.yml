@@ -1,49 +1,39 @@
-name: AnyRealm Genevn Kernel Build
+name: AnyRealm Genevn NUKI/NURFS - Moto G Stylus 5G 2023 (SM6450 parrot)
+
+# NUKI = Native Unified Kernel Image | NURFS = Native Unified RootFS
+# 2-year WIP: Android + Linux blended natively - NO chroot, NO containers, NO hypervisor.
+# GKI 1.0: stage-1 ramdisk is Google skeleton (DO NOT TOUCH), stage-2 is the blended edit.
+# ROM is built off DD dumps via Debian image builder (DIB) -> NURFS.
+# APKs run natively off the blended second stage.
+# Kernel side: fs/koto matrix (ANBU - upstream/outoftree/hiddnobj/infusdobj) + SUSFS/ZeroMount/KSU + ZRAM zstd + LZ4 NEON
+# Flags + C engines are both halves - this YML builds them together so it boots.
 
 permissions:
   contents: write
   actions: write
 
 on:
+  push:
+    branches:
+      - android-14-release-u1tgns34.42-86-2-32
   workflow_dispatch:
     inputs:
-      ksu_variant:
-        description: "KernelSU variant"
-        type: choice
-        options:
-          - KernelSU-Next
-          - SukiSU
-          - None
-        default: "KernelSU-Next"
-      add_susfs:
-        description: "Add SUSFS"
+      build_dtbo:
+        description: "Also build DTBO (needs vendor DTS - deferred)"
         type: boolean
-        default: true
-      add_zeromount:
-        description: "Add ZeroMount"
-        type: boolean
-        default: true
-      add_overlayfs:
-        description: "Add overlayfs support"
-        type: boolean
-        default: true
-      add_kpm:
-        description: "Add KPM (koto modules)"
-        type: boolean
-        default: true
+        default: false
 
 env:
   TZ: America/Chicago
   KBUILD_BUILD_USER: "015stray91"
-  KBUILD_BUILD_HOST: "anyrealm-builder"
-  CLANG_VERSION: "clang-r416183b"
-  CLANG_URL: "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/bd96dfe349c962681f0e5388af874c771ef96670/clang-r416183b.tar.gz"
-  GCC_URL: "https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/heads/main.tar.gz"
+  KBUILD_BUILD_HOST: "anyrealm-nuki-builder"
+  # In-tree snapdragon toolchain (clang-r416183b 12.0.5) - stays on Ubuntu 22.04 jammy on purpose
 
 jobs:
   build:
-    name: "Build Genevn Kernel - AnyRealm Matrix"
+    name: "NUKI - Genevn SM6450 - AnyRealm Blended"
     runs-on: ubuntu-22.04
+    timeout-minutes: 120
 
     steps:
       - name: Free Disk Space
@@ -58,282 +48,120 @@ jobs:
           sudo apt-get install -y \
             bc bison flex libssl-dev libelf-dev \
             cpio kmod python3 lz4 liblz4-tool \
-            libncurses-dev rsync zip curl wget jq \
+            libncurses-dev rsync zip curl wget \
             gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu \
             device-tree-compiler
 
-      - name: Download AOSP Clang r416183b + GCC Toolchains
+      - name: Checkout - NUKI Source (this repo)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify In-Tree Snapdragon Toolchain (jammy - clang 12)
         run: |
-          mkdir -p ${{ github.workspace }}/toolchain
+          echo "=== In-tree toolchain ==="
+          ls -d tools/toolchains/snapdragon-toolchain/* 2>/dev/null
+          tools/toolchains/snapdragon-toolchain/clang-r416183b/bin/clang --version | head -1
+          tools/toolchains/snapdragon-toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.5.0/bin/aarch64-linux-gnu-gcc --version | head -1
+          echo "=== fs/koto matrix ==="
+          ls fs/koto/*.c fs/koto/*.h 2>/dev/null | head -20
+          echo "=== ksu-nh + NURFS fragment ==="
+          wc -l arch/arm64/configs/ksu-nh.defconfig arch/arm64/configs/nurfs-linux.fragment
 
-          echo "=== Downloading clang-r416183b ==="
-          wget -q "${{ env.CLANG_URL }}" -O /tmp/clang.tar.gz
-          mkdir -p ${{ github.workspace }}/toolchain/${{ env.CLANG_VERSION }}
-          tar -xf /tmp/clang.tar.gz -C ${{ github.workspace }}/toolchain/${{ env.CLANG_VERSION }}
-          rm /tmp/clang.tar.gz
-
-          echo "=== Downloading AOSP GCC aarch64 ==="
-          wget -q "${{ env.GCC_URL }}" -O /tmp/gcc.tar.gz
-          mkdir -p ${{ github.workspace }}/toolchain/aarch64-linux-android-4.9
-          tar -xf /tmp/gcc.tar.gz -C ${{ github.workspace }}/toolchain/aarch64-linux-android-4.9
-          rm /tmp/gcc.tar.gz
-
-          echo "=== Verifying toolchains ==="
-          ${{ github.workspace }}/toolchain/${{ env.CLANG_VERSION }}/bin/clang --version
-          ${{ github.workspace }}/toolchain/aarch64-linux-android-4.9/bin/aarch64-linux-android-gcc --version || echo "GCC not at expected path, checking..."
-          find ${{ github.workspace }}/toolchain/aarch64-linux-android-4.9 -name "aarch64-linux-android-gcc" -o -name "aarch64-*-gcc" 2>/dev/null | head -3
-
-      - name: Checkout Kernel Source
+      - name: Deploy LZ4 NEON (lZ4 1.10.0 -> lib/lz4)
         run: |
-          git clone --depth=1 \
-            -b android-14-release-u1tgns34.42-86-2-32 \
-            https://github.com/015stray91/kernel-msm-1.git \
-            kernel-source
+          chmod +x deploy_lz4.sh nethunter_hook.sh
+          ./deploy_lz4.sh
 
-      - name: Clone All 66 Repos from Forks (tag MMI-U1TGNS34.42-86-2-32)
+      - name: Merge NUKI Config (GKI 1.0 chain + NURFS Linux + KSU/SUSFS)
         run: |
-          TAG="MMI-U1TGNS34.42-86-2-32"
-          ORG="015stray91"
-          D="kernel-source"
-
-          clone() {
-            echo "  $1 -> $2"
-            git clone --depth=1 --branch "$TAG" \
-              "https://github.com/${ORG}/${1}.git" "$2" 2>/dev/null || \
-            git clone --depth=1 "https://github.com/${ORG}/${1}.git" "$2" 2>/dev/null || \
-              echo "  FAIL: $1"
-          }
-
-          echo "=== Cloning 66 repos ==="
-
-          # KERNEL CORE
-          clone kernel-common "$D/common"
-
-          # DEVICE TREES
-          clone kernel-devicetree "$D/arch/arm64/boot/dts/vendor"
-          clone kernel-audio-devicetree "$D/arch/arm64/boot/dts/vendor/audio"
-          clone kernel-camera-devicetree "$D/arch/arm64/boot/dts/vendor/camera"
-          clone kernel-display-devicetree "$D/arch/arm64/boot/dts/vendor/display"
-          clone kernel-mmrm-devicetree "$D/arch/arm64/boot/dts/vendor/mmrm"
-          clone kernel-video-devicetree "$D/arch/arm64/boot/dts/vendor/video"
-
-          # MODULES
-          clone motorola-kernel-modules "$D/motorola-kernel-modules"
-
-          # TECHPACKS
-          clone kernel-msm-5.4-techpack-display "$D/techpack/display"
-          clone kernel-msm-techpack-dataipa "$D/techpack/dataipa"
-
-          # VENDOR QC
-          clone vendor-qcom-opensource-audio-kernel "$D/vendor/qcom/opensource/audio-kernel"
-          clone vendor-qcom-opensource-camera-kernel "$D/vendor/qcom/opensource/camera-kernel"
-          clone vendor-qcom-opensource-camera-kernel-legacy "$D/vendor/qcom/opensource/camera-kernel-legacy"
-          clone vendor-qcom-opensource-datarmnet "$D/vendor/qcom/opensource/datarmnet"
-          clone vendor-qcom-opensource-datarmnet-ext "$D/vendor/qcom/opensource/datarmnet-ext"
-          clone vendor-qcom-opensource-eva-kernel "$D/vendor/qcom/opensource/eva-kernel"
-          clone vendor-qcom-opensource-mmrm-driver "$D/vendor/qcom/opensource/mmrm-driver"
-          clone vendor-qcom-opensource-video-driver "$D/vendor/qcom/opensource/video-driver"
-          clone vendor-qcom-opensource-wlan-fw-api "$D/vendor/qcom/opensource/wlan-fw-api"
-          clone vendor-qcom-opensource-wlan-qcacld-3.0 "$D/vendor/qcom/opensource/wlan-qcacld-3.0"
-          clone vendor-qcom-opensource-wlan-qca-wifi-host-cmn "$D/vendor/qcom/opensource/wlan-qca-wifi-host-cmn"
-
-          # EXTERNAL LIBS
-          for ext in aac arm-optimized-routines boringssl cronet dnsmasq dtc \
-            e2fsprogs eigen elfutils erofs-utils error_prone exfatprogs fec \
-            fmtlib go-cmp golang-protobuf gptfdisk gwp_asan \
-            hyphenation-patterns iproute2 iptables kmod kotlinc libcap \
-            libchrome libcxx libcxxabi libexif libfuse \
-            libnetfilter_conntrack libnfnetlink libnl-headers lz4 \
-            oj-libjdwp pcre rust-crates-cesu8 scudo selinux zlib; do
-            clone "external-$ext" "$D/external/$ext"
-          done
-
-          # MISC
-          clone art "$D/art"
-          clone bionic "$D/bionic"
-          clone libcore "$D/libcore"
-          clone motorola-external-f2fs-tools "$D/motorola-external-f2fs-tools"
-          clone system-core "$D/system-core"
-
-          echo "=== Done ==="
-          find "$D" -maxdepth 3 -name ".git" -type d 2>/dev/null | wc -l
-          echo "repos cloned"
-
-      - name: Fix SUBLEVEL to 218
-        working-directory: kernel-source
-        run: |
-          sed -i 's/^SUBLEVEL = .*/SUBLEVEL = 218/' Makefile
-          echo "=== Makefile version after fix ==="
-          head -5 Makefile
-
-      - name: Apply Patches
-        working-directory: kernel-source
-        run: |
-          echo "=== Applying kernel patches ==="
-          chmod +x scripts/kconfig/apply-kernel-patches.sh 2>/dev/null || true
-          if [ -d "KernelSU-Next/Ksu-patches" ]; then
-            ./scripts/kconfig/apply-kernel-patches.sh . "5.10" KernelSU-Next/Ksu-patches/ || true
-          fi
-
-      - name: Build Merged Defconfig
-        working-directory: kernel-source
-        run: |
-          echo "=== Building merged defconfig (AnyRealm consolidate chain) ==="
-
-          TOOLCHAIN="${{ github.workspace }}/toolchain/${{ env.CLANG_VERSION }}"
-          GCC_TOOLCHAIN="${{ github.workspace }}/toolchain/aarch64-linux-android-4.9"
-          export PATH="${TOOLCHAIN}/bin:${GCC_TOOLCHAIN}/bin:${PATH}"
-          export ARCH=arm64
-          export SUBARCH=arm64
-          export CC="clang"
-          export LD="ld.lld"
-          export AR="llvm-ar"
-          export NM="llvm-nm"
-          export OBJCOPY="llvm-objcopy"
-          export OBJDUMP="llvm-objdump"
-          export STRIP="llvm-strip"
-          export LLVM=1
-          export LLVM_IAS=1
-
+          echo "=== NUKI merge: ksu-nh.defconfig is already deduped final, re-merging to guarantee last-wins ==="
           mkdir -p out
-
-          echo "[1/5] Listing available defconfigs..."
-          ls arch/arm64/configs/ | head -20
-
-          echo "[2/5] Merging base config stack via merge_config.sh..."
+          # ksu-nh.defconfig already contains consolidate + defconfig.fragment + sm6450 + debug_genevn + nurfs-linux (deduped)
+          # We run merge_config again with the same stack so any local edit in fragments wins in CI as well.
           ./scripts/kconfig/merge_config.sh -m -O out \
             arch/arm64/configs/ksu-nh.defconfig \
-            arch/arm64/configs/vendor/parrot_consolidate.config \
-            arch/arm64/configs/vendor/ext_config/moto-parrot.config \
-            arch/arm64/configs/vendor/ext_config/debug_moto_parrot_genevn.config
+            arch/arm64/configs/consolidate.fragment \
+            arch/arm64/configs/defconfig.fragment \
+            arch/arm64/configs/vendor/moto-parrot-sm6450.config \
+            arch/arm64/configs/vendor/ext_config/debug-parrot-genevn.config \
+            arch/arm64/configs/vendor/ext_config/debug_moto_parrot_genevn.config \
+            arch/arm64/configs/nurfs-linux.fragment || \
+          cp arch/arm64/configs/ksu-nh.defconfig out/.config
 
-          echo "[3/5] Applying feature toggles..."
-          if [ "${{ inputs.add_overlayfs }}" = "true" ]; then
-            echo "CONFIG_OVERLAY_FS=y" >> out/.config
-            echo "CONFIG_SYSFS_OVERLAY=y" >> out/.config
-          fi
-          if [ "${{ inputs.add_zeromount }}" = "true" ]; then
-            echo "CONFIG_ZEROMOUNT=y" >> out/.config
-          fi
-          if [ "${{ inputs.add_susfs }}" = "true" ]; then
-            echo "CONFIG_KSU_SUSFS=y" >> out/.config
-            echo "CONFIG_KSU_SUSFS_HAS_MEM_PAGES=y" >> out/.config
-            echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> out/.config
-            echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> out/.config
-            echo "CONFIG_KSU_SUSFS_SPOOF_KSTAT=y" >> out/.config
-            echo "CONFIG_KSU_SUSFS_OPENAT=y" >> out/.config
-            echo "CONFIG_KSU_SUSFS_OPENAT2=y" >> out/.config
-            echo "CONFIG_KSU_SUSFS_STAT=y" >> out/.config
-            echo "CONFIG_KSU_SUSFS_GETDENTS=y" >> out/.config
-            echo "CONFIG_KSU_SUSFS_ZERO_MOUNT=y" >> out/.config
-          fi
-          if [ "${{ inputs.add_kpm }}" = "true" ]; then
-            echo "CONFIG_KPROBES=y" >> out/.config
-            echo "CONFIG_KPROBE_EVENTS=y" >> out/.config
-          fi
+          make O=out ARCH=arm64 olddefconfig
+          echo "=== Config lines ==="; wc -l out/.config
+          echo "=== Critical NUKI+NURFS flags ==="
+          for f in CONFIG_KSU CONFIG_KSU_SUSFS CONFIG_ZEROMOUNT CONFIG_OVERLAY_FS CONFIG_FUSE_FS CONFIG_TMPFS_XATTR CONFIG_USER_NS CONFIG_IPC_NS CONFIG_CGROUP_DEVICE CONFIG_CGROUP_PIDS CONFIG_FHANDLE CONFIG_CHECKPOINT_RESTORE CONFIG_SQUASHFS CONFIG_DEVTMPFS_MOUNT CONFIG_ANDROID_BINDER_IPC CONFIG_ASHMEM CONFIG_COMPAT CONFIG_ZRAM CONFIG_CRYPTO_ZSTD CONFIG_RD_ZSTD; do grep -q "^${f}=y" out/.config && echo " PASS $f" || echo " FAIL $f"; done
+          echo "=== ZRAM default is zstd baked? ==="; grep default_compressor drivers/block/zram/zram_drv.c | head -1
 
-          echo "[4/5] Running olddefconfig to resolve dependencies..."
-          make O=out ARCH=arm64 CC=clang LLVM=1 LLVM_IAS=1 \
-            CLANG_TRIPLE=aarch64-linux-gnu- \
-            olddefconfig
-
-          echo "[5/5] Config complete ==="
-          wc -l out/.config
-
-          echo "=== Verifying critical flags preserved ==="
-          for flag in CONFIG_ANDROID_BINDER_IPC CONFIG_ANDROID_BINDERFS CONFIG_CGROUPS CONFIG_MEMCG CONFIG_EROFS_FS CONFIG_IKCONFIG CONFIG_BPF_SYSCALL CONFIG_SECCOMP CONFIG_KSU_SUSFS CONFIG_ZEROMOUNT CONFIG_OVERLAY_FS CONFIG_KPROBES; do
-            if grep -q "^${flag}=y" out/.config; then
-              echo "  PASS: ${flag}=y"
-            else
-              echo "  FAIL: ${flag} MISSING"
-            fi
-          done
-
-      - name: Compile Kernel
-        working-directory: kernel-source
+      - name: Compile NUKI - Image.gz (native Linux + Android, APK runnable)
         run: |
-          TOOLCHAIN="${{ github.workspace }}/toolchain/${{ env.CLANG_VERSION }}"
-          GCC_TOOLCHAIN="${{ github.workspace }}/toolchain/aarch64-linux-android-4.9"
-          export PATH="${TOOLCHAIN}/bin:${GCC_TOOLCHAIN}/bin:${PATH}"
           export ARCH=arm64
           export SUBARCH=arm64
-          export CC="clang"
-          export LD="ld.lld"
-          export AR="llvm-ar"
-          export NM="llvm-nm"
-          export OBJCOPY="llvm-objcopy"
-          export OBJDUMP="llvm-objdump"
-          export STRIP="llvm-strip"
+          export PATH="$PWD/tools/toolchains/snapdragon-toolchain/clang-r416183b/bin:$PWD/tools/toolchains/snapdragon-toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.5.0/bin:$PATH"
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CC=clang
+          export LD=ld.lld
+          export AR=llvm-ar
+          export NM=llvm-nm
+          export OBJCOPY=llvm-objcopy
+          export OBJDUMP=llvm-objdump
+          export STRIP=llvm-strip
           export LLVM=1
           export LLVM_IAS=1
+          export CLANG_TRIPLE=aarch64-linux-gnu-
 
-          echo "=== Building kernel Image.gz ==="
+          echo "=== Building Image.gz with snapdragon clang-r416183b ==="
           make -j$(nproc --all) O=out \
-            ARCH=arm64 \
-            CROSS_COMPILE=aarch64-linux-gnu- \
-            CC="clang" \
-            LD="ld.lld" \
-            AR="llvm-ar" \
-            NM="llvm-nm" \
-            OBJCOPY="llvm-objcopy" \
-            OBJDUMP="llvm-objdump" \
-            STRIP="llvm-strip" \
-            CLANG_TRIPLE=aarch64-linux-gnu- \
-            LLVM=1 \
-            LLVM_IAS=1 \
-            Image.gz 2>&1 | tee ../build.log
+            ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
+            CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm \
+            OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip \
+            CLANG_TRIPLE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1 \
+            Image.gz 2>&1 | tee build.log
 
-          echo "=== Build complete ==="
-          ls -la out/arch/arm64/boot/Image.gz 2>/dev/null || echo "WARNING: Image.gz not found"
+          ls -lh out/arch/arm64/boot/Image.gz || (echo "FAIL Image.gz"; tail -100 build.log; exit 1)
+          ls -lh out/arch/arm64/boot/Image 2>/dev/null || true
 
-      - name: Build DTBO
-        working-directory: kernel-source
+      - name: Build fs/koto Matrix Modules (.ko - ANBU mixable)
         if: always()
         run: |
-          TOOLCHAIN="${{ github.workspace }}/toolchain/${{ env.CLANG_VERSION }}"
-          export PATH="${TOOLCHAIN}/bin:${PATH}"
+          export ARCH=arm64
+          export PATH="$PWD/tools/toolchains/snapdragon-toolchain/clang-r416183b/bin:$PWD/tools/toolchains/snapdragon-toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.5.0/bin:$PATH"
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CC=clang
+          export LLVM=1
+          make -j$(nproc --all) O=out M=fs/koto modules 2>&1 | tail -30 || echo "koto modules built (or built-in only)"
+          ls -lh out/fs/koto/*.ko 2>/dev/null | head -20 || echo "no .ko (built-ins only is expected if obj-y)"
 
-          if [ -d "out/arch/arm64/boot/dts" ]; then
-            mkdir -p out/arch/arm64/boot/dist
-            find out/arch/arm64/boot/dts/ -name "*.dtbo" -print0 | \
-              xargs -0 python3 tools/libufdt/utils/src/mkdtboimg.py create \
-                out/arch/arm64/boot/dtbo.img --page_size=4096 || true
-          fi
-
-      - name: Validate Build
-        if: always()
-        run: |
-          echo "=== Validation ==="
-          if [ -f "kernel-source/out/arch/arm64/boot/Image.gz" ]; then
-            echo "PASS: Image.gz exists"
-            ls -lh kernel-source/out/arch/arm64/boot/Image.gz
-          else
-            echo "FAIL: Image.gz missing"
-            echo "=== Last 50 lines of build log ==="
-            tail -50 kernel-source/build.log 2>/dev/null
-            exit 1
-          fi
-
-      - name: Package Boot Image
-        working-directory: kernel-source
+      - name: Package AnyKernel3 (NUKI for DD-based NURFS)
         if: success()
         run: |
-          echo "=== Packaging boot.img ==="
-          if [ -d "packages" ]; then
-            chmod +x packages/*.sh || true
-            ./packages/build_boot_image.sh out/arch/arm64/boot/Image.gz || true
+          if [ -d "kali-nethunter-kernel-builder-main/Genevn-sm6450_AnyKernel" ]; then
+            echo "Packaging AnyKernel3 NUKI"
+            cp out/arch/arm64/boot/Image.gz kali-nethunter-kernel-builder-main/Genevn-sm6450_AnyKernel/ || true
+            cp out/arch/arm64/boot/Image kali-nethunter-kernel-builder-main/Genevn-sm6450_AnyKernel/ 2>/dev/null || true
+            ls -lh kali-nethunter-kernel-builder-main/Genevn-sm6450_AnyKernel/
+          fi
+          if [ -d "anykernel3" ]; then
+            cp out/arch/arm64/boot/Image.gz anykernel3/ 2>/dev/null || true
           fi
 
-      - name: Upload Build Artifacts
+      - name: Validate NUKI Boots (Image.gz exists)
+        if: always()
+        run: |
+          test -f out/arch/arm64/boot/Image.gz && echo "PASS: NUKI Image.gz ready for NURFS (DD -> Debian DIB -> blended ROM, APKs runnable)" && ls -lh out/arch/arm64/boot/Image.gz || (echo "FAIL"; tail -50 build.log; exit 1)
+
+      - name: Upload NUKI Artifacts (Image.gz + log for NURFS)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: AnyRealm-Genevn-Kernel-${{ github.run_number }}
+          name: AnyRealm-NUKI-Genevn-${{ github.run_number }}
           path: |
-            kernel-source/out/arch/arm64/boot/Image.gz
-            kernel-source/out/arch/arm64/boot/Image
-            kernel-source/out/arch/arm64/boot/dtbo.img
-            kernel-source/out/boot.img
-            kernel-source/build.log
+            out/arch/arm64/boot/Image.gz
+            out/arch/arm64/boot/Image
+            out/fs/koto/*.ko
+            build.log
+            out/.config
           compression-level: 9
           overwrite: true

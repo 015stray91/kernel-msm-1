@@ -1,27 +1,40 @@
 # SPDX-License-Identifier: GPL-2.0
-# Makefile for AnyRealm Kotoamatsukami Stealth Engine
-# kpm_eud modules are modular variants for the "module matrix"
-# Can be loaded singly or mixed combinations
+# AnyRealm Kotoamatsukami Stealth Engine - NUKI/NURFS Unified
+# Matrix: ANBU-style - each module stays itself, but under a team they merge
+# to create new blended binaries (temporary identity-strip, not full strip).
 
-obj-y += main.o
-obj-y += hybrid_mount.o
-obj-y += Continue.o
-obj-y += KOTOAMATSUKAMI-CORE.o
-obj-y += KSUsafty.o
-obj-y += nethunter_box.o
+# --- Built-ins: always in the NUKI Image.gz (blended rootfs needs them live) ---
 obj-y += Virtualspace.o
-obj-y += Zromount.o
 obj-y += hidden-objects.o
-obj-y += kde.o
+obj-y += kpm_eud_engine.o
+obj-y += koto_core.o
 
-# kpm_eud modular variants - selectable for module matrix
-# Single: make M=fs/koto modules
-# Mixed: load combinations of .ko files
-kpm_eud-hiddnobj-exp-test-load-objs := kpm_eud_hiddnobj-exp-test-load.o
-kpm_eud-infusdobj-exp-test-load-objs := kpm_eud_infusdobj-exp-test-load.o
-kpm_eud-outoftree-exp-test-load-objs := kpm_eud_outoftree-exp-test-load.o
-kpm_eud-upstrm-exp-test-load-objs := kpm_eud_upstrm-exp-test-load.o
+# NOTE: hybrid_mount.h is the header (extracted from Continue.c).
+# The following were rehomed to .archive_* and are NOT built as obj-y:
+#   Continue.c/kde.c/KOTOAMATSUKAMI-CORE.c(1)/main.c/ksu.c -> headers/docs
+#   Addsusfs50.c/Enhanced susfs.c/Zromount.c/KSUsafty.c -> .patch files
+#   nethunter_box.c (userspace multi-call) and sufs_wrapper.c (KPM) live for
+#   NURFS/Debian-image stage, not in-kernel.
 
-# Allow modular build: make M=fs/koto modules
-# Or mixed: insmod combinations of the .ko files
-obj-m += $(kpm_eud-hiddnobj-exp-test-load-objs) $(kpm_eud-infusdobj-exp-test-load-objs) $(kpm_eud-outoftree-exp-test-load-objs) $(kpm_eud-upstrm-exp-test-load-objs)
+# --- Matrix variants: loadable .ko that can be mixed like ANBU cells ---
+# Hidden Object = two upstreams merged to hide
+# Infused Object = out-of-tree fused into upstream via upstream entrance
+# Upstream / Out-of-tree = standalone team roles
+
+# Hidden - test loader (module_init/exit) + embedded installer (EXPORT_SYMBOL)
+kpm_eud-hiddnobj-test-objs := kpm_eud_hiddnobj-exp-test-load.o
+kpm_eud-hiddnobj-emb-objs := kpm_eud_hiddnobj-Installemb.o
+# Infused
+kpm_eud-infusdobj-test-objs := kpm_eud_infusdobj-exp-test-load.o
+kpm_eud-infusdobj-emb-objs := kpm_eud_infusdobj-Installemb.o
+# Out-of-tree
+kpm_eud-outoftree-emb-objs := kpm_eud_outoftree-Installemb.o
+# Upstream
+kpm_eud-upstrm-emb-objs := kpm_eud_upstrm-Install-emb.o
+
+obj-m += kpm_eud-hiddnobj-test.o
+obj-m += kpm_eud-hiddnobj-emb.o
+obj-m += kpm_eud-infusdobj-test.o
+obj-m += kpm_eud-infusdobj-emb.o
+obj-m += kpm_eud-outoftree-emb.o
+obj-m += kpm_eud-upstrm-emb.o

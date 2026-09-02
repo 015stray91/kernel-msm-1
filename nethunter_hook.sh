@@ -1,32 +1,29 @@
 #!/bin/bash
-# Force injection past Qualcomm verification engines
+# NUKI/NURFS Genevn (SM6450 parrot) - Native Unified Kernel Image
+# GKI 1.0: stage-1 ramdisk is Google skeleton (DO NOT TOUCH), stage-2 is where we blend.
+# 2 years WIP: fs/koto matrix (ANBU) + SUSFS/ZeroMount + KPM-EUD + NURFS Debian-blended rootfs
+# This hook merges the verified config chain. ksu-nh.defconfig is already deduped final,
+# but we re-merge with fragments to guarantee last-wins for local edits.
+set -e
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
 
-# Part 1: Core Compression & Performance
-export CONFIG_KERNEL_LZ4=y
-export CONFIG_ZRAM=y
-export CONFIG_ZSMALLOC=y
-export CONFIG_ZCOMP_LZ4K=y
-export CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
-export CONFIG_QCOM_EUD=y
+echo "=== NUKI merge: ksu-nh.defconfig + fragments -> .config ==="
+./scripts/kconfig/merge_config.sh -m \
+  arch/arm64/configs/ksu-nh.defconfig \
+  arch/arm64/configs/consolidate.fragment \
+  arch/arm64/configs/defconfig.fragment \
+  arch/arm64/configs/vendor/moto-parrot-sm6450.config \
+  arch/arm64/configs/vendor/ext_config/debug-parrot-genevn.config \
+  arch/arm64/configs/vendor/ext_config/debug_moto_parrot_genevn.config \
+  arch/arm64/configs/nurfs-linux.fragment \
+  2>&1 | tail -20
 
-# Part 2: KernelSU Next & SusFS
-export CONFIG_KPROBES=y
-export CONFIG_KPROBE_EVENTS=y
-export CONFIG_KSU_SUSFS=y
-export CONFIG_KSU_SUSFS_HAS_MEM_PAGES=y
-export CONFIG_KSU_SUSFS_SUS_MOUNT=y
-export CONFIG_KSU_SUSFS_ZERO_MOUNT=y
+if [ -f "deploy_lz4.sh" ]; then
+  chmod +x deploy_lz4.sh
+  ./deploy_lz4.sh || true
+fi
 
-# Part 3: NetHunter Attack Module Drivers
-export CONFIG_USB_GADGET=y
-export CONFIG_USB_CONFIGFS=y
-export CONFIG_USB_CONFIGFS_F_HID=y
-export CONFIG_UHID=y
-export CONFIG_NET=y
-export CONFIG_WIRELESS=y
-export CONFIG_CFG80211=m
-export CONFIG_MAC80211=m
-export CONFIG_NL80211_TESTMODE=y
-export CONFIG_NETFILTER=y
-export CONFIG_IP_NF_MANGLE=y
-export CONFIG_IP6_NF_MANGLE=y
+# Toolchains are in-tree (snapdragon-toolchain) - no download needed on 22.04
+# clang-r416183b (clang 12.0.5), gcc-linaro-7.5.0, sdclang 8 - kept on purpose for jammy
+echo "Toolchain: $(tools/toolchains/snapdragon-toolchain/clang-r416183b/bin/clang --version 2>&1 | head -1)"

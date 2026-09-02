@@ -1,4 +1,3 @@
-```c
 /* SPDX-License-Identifier: GPL-2.0 */
 /*
  * hybrid_mount.h - Hybrid Mount subsystem for KernelSU Next

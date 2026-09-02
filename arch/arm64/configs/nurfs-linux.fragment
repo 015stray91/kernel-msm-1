@@ -1,0 +1,23 @@
+# NURFS: Native Unified RootFS - Linux-compat supplement
+# Makes the kernel understand Linux natively alongside Android (no chroot/container)
+# Systemd + Debian image builder (DIB) hard requirements
+CONFIG_CGROUP_DEVICE=y
+CONFIG_CGROUP_PIDS=y
+CONFIG_CGROUP_HUGETLB=y
+CONFIG_CGROUP_PERF=y
+CONFIG_CGROUP_NET_CLASSID=y
+CONFIG_CHECKPOINT_RESTORE=y
+CONFIG_FHANDLE=y
+CONFIG_IPC_NS=y
+CONFIG_DEVTMPFS_MOUNT=y
+CONFIG_AUTOFS4_FS=y
+CONFIG_ANON_VMA_NAME=y
+# Compressed read-only roots for NURFS live layers
+CONFIG_SQUASHFS=y
+CONFIG_SQUASHFS_XZ=y
+CONFIG_SQUASHFS_LZO=y
+CONFIG_SQUASHFS_ZSTD=y
+CONFIG_SQUASHFS_FILE_DIRECT=y
+# Optional but useful for flexible NURFS partitions
+CONFIG_BTRFS_FS=m
+CONFIG_BTRFS_FS_POSIX_ACL=y

@@ -1,4 +1,3 @@
-```c
 /* SPDX-License-Identifier: GPL-2.0 */
 /*
  * hybrid_mount.c - Hybrid Mount subsystem implementation
