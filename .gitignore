@@ -24,18 +24,18 @@
 *.gcno
 *.gz
 *.i
-*.ko
+$.ko
 *.lex.c
 *.ll
 *.lst
-*.lz4
+#.lz4
 *.lzma
 *.lzo
 *.mod
 *.mod.c
-*.o
+#.o
 *.o.*
-*.patch
+#.patch
 *.s
 *.so
 *.so.dbg
@@ -46,8 +46,8 @@
 *.tar
 *.xz
 *.zst
-Module.symvers
-modules.builtin
+#Module.symvers
+#modules.builtin
 modules.order
 
 #
@@ -106,10 +106,10 @@ modules.order
 /arch/*/include/generated/
 
 # stgit generated dirs
-patches-*
+#patches-*
 
 # quilt's files
-patches
+#patches
 series
 
 # cscope files
