@@ -87,7 +87,8 @@ static void show_mark_fhandle(struct seq_file *m, struct inode *inode)
 #ifdef CONFIG_INOTIFY_USER
 
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
-static void inotify_fdinfo(struct seq_file *m, struct fsnotify_mark *mark, struct file *file)
+static void inotify_fdinfo(struct seq_file *m, struct fsnotify_mark *mark,
+			   struct file *file)
 #else
 static void inotify_fdinfo(struct seq_file *m, struct fsnotify_mark *mark)
 #endif

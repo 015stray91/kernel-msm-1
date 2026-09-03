@@ -93,3 +93,4 @@ CONFIG_ANDROID_VENDOR_HOOKS=y
 # Disabled in sacred base so it overrides the =y from defconfig / debug-parrot-genevn.
 # CONFIG_TRIM_UNUSED_KSYMS is not set
 # CONFIG_UNUSED_KSYMS_WHITELIST is not set
+# CONFIG_SYSTEM_TRUSTED_KEYRING is not set
