@@ -1,7 +1,0 @@
-#!/bin/bash
-
-# Start monitor mode, restart is not needed in case this is being ran in second kali terminal
-nexutil -m2
-
-# Set ioctl intercept
-export LD_PRELOAD=/system/lib64/kalilibnexmon.so

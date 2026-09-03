@@ -1,9 +1,0 @@
-# GitLab pages
-public/
-# Generated documentation
-kernel*.md
-image*.md
-device*.md
-android*.md
-# Python virtual environments
-.env
