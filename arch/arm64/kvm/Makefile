@@ -5,6 +5,14 @@
 
 ccflags-y += -I $(srctree)/$(src)
 
+# Disable Link-Time Optimization (LTO) specifically for KVM to resolve LLD plugin conflicts.
+# KVM components (EL2 vector tables, switch code) require strict memory layout that
+# LTO's cross-TU inlining disrupts. Strip -flto and CFI from KBUILD_CFLAGS for KVM.
+DISABLE_LTO := y
+export DISABLE_LTO
+KVM_CFLAGS := $(filter-out -flto -fsanitize=cfi%,$(KBUILD_CFLAGS))
+ccflags-y += $(filter-out -flto -fsanitize=cfi%,$(ccflags-y))
+
 KVM=../../../virt/kvm
 
 obj-$(CONFIG_KVM) += kvm.o

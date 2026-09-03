@@ -3,8 +3,11 @@
 # Makefile for Kernel-based Virtual Machine module, HYP/nVHE part
 #
 
-asflags-y := -D__KVM_NVHE_HYPERVISOR__ -D__DISABLE_EXPORTS
+# Disable LTO for nVHE hypervisor code - strict memory layout required.
+DISABLE_LTO := y
+export DISABLE_LTO
 ccflags-y := -D__KVM_NVHE_HYPERVISOR__ -D__DISABLE_EXPORTS -D__DISABLE_TRACE_MMIO__
+ccflags-y := $(filter-out -flto -fsanitize=cfi%,$(ccflags-y))
 
 hostprogs := gen-hyprel
 HOST_EXTRACFLAGS += -I$(objtree)/include
