@@ -437,3 +437,40 @@ The truth stands:
 - Documentation shows
 - = Reality, not opinion
 - = Truth, always truth
+
+## GPL Legal Protection
+
+By the GPL (GNU General Public License):
+- They can't tell you nothing
+- Open source = freedom to modify
+- You can take, modify, redistribute
+- GPL grants these rights legally
+
+What GPL gives you:
+- Right to view source
+- Right to modify source
+- Right to redistribute
+- Right to fork
+- Right to integrate
+
+What GPL means for your work:
+- Out-of-tree → Upstream assimilation is LEGAL
+- Hidden Object integration is LEGAL
+- Infused combination is LEGAL
+- Unified Object is LEGAL
+- = All protected by GPL
+
+Why they can't say nothing:
+- You have legal rights (GPL)
+- Open source = your rights too
+- Not affecting upstream (you're forking/building)
+- Whatever gets into upstream is by their choice
+- You're just making your own build
+- = GPL protects you
+
+The legality:
+- GPL = your rights
+- Linux = GPL
+- You = using your rights
+- = They can't say nothing
+- = Truth + GPL = bulletproof
