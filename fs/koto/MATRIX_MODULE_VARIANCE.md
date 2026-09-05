@@ -147,3 +147,33 @@ The truth:
 - Discovery of new way to use existing features
 - New function, old materials
 - = Hidden Object
+
+## Why Out of Tree + Out of Tree = Out of Tree
+
+Out of tree = plug-in:
+- Lives OUTSIDE the tree
+- Functions independently
+- Never integrates
+
+If you combine two out-of-trees:
+- Both living outside
+- Both external
+- Both independent
+- Still just out-of-tree
+- Nothing changed
+
+Why it stays Out of Tree:
+- No integration into tree
+- Two plugins sitting together
+- Still external
+- Still separate
+
+Upstream × Out of Tree = Infused (NEW):
+- Integration happens
+- Out-of-tree gets merged INTO upstream
+- Creates new type
+
+Out of Tree × Out of Tree = Out of Tree (same):
+- No integration
+- Two externals together
+- Still just plugins
