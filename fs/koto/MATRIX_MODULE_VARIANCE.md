@@ -251,3 +251,43 @@ The process:
 4. All out-of-tree gets fully assimilated
 5. Everything unified into dependencies
 6. = Unified Object (apex, complete assimilation)
+
+## Out-of-Tree → Upstream Progression
+
+Out-of-tree can be assimilated INTO upstream over time:
+
+Stage 1: Out-of-tree (external)
+- Needs diffs and patches
+- Lives outside the tree
+- Manual integration required
+
+Stage 2: Infused
+- Out-of-tree + Upstream combined
+- Patches still needed
+- Partially in the tree
+
+Stage 3: Add Hidden Object
+- Multiple upstreams combined
+- More encapsulation
+- Patches start becoming unnecessary
+- Out-of-tree further integrated
+
+Stage 4: Unified
+- Hidden + Infused merged
+- All out-of-tree assimilated
+- Patches no longer needed
+- = NEW UPSTREAM created
+- Out-of-tree has become an upstream
+
+The progression:
+- Out-of-tree (patches required, external)
+- → Infused (patches still, partial)
+- → Hidden (patches fading)
+- → Unified (no patches, fully inside, NEW UPSTREAM)
+
+The transformation:
+- Once unified, the out-of-tree is now an upstream
+- It was external, now internal
+- It was separate, now integrated
+- The new function is its own dependency
+- = Out-of-tree became upstream
