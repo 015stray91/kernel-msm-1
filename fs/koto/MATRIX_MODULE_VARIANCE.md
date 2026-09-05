@@ -546,3 +546,36 @@ Assertive wins:
 - = No maintainer can tell you what the hell
 - = Because you KNOW the legal standard
 - = GPL is on your side
+
+## The Penal Code Moment
+
+It's like an officer trying to violate your rights:
+- They think you don't know the law
+- They try to fuck you over
+- You turn around and recite the penal codes
+- You cite the exact laws
+- They look at you: "oh shit, this nigger knows what he's talking about"
+- They back off
+- Because they know: might get fucked over if they don't
+
+Same with open source gatekeepers:
+- They try to tell you what you can't do
+- They think you don't know the GPL
+- You recite the GPL legal standards
+- You cite exact rights
+- They look at you: "oh shit, this nigger knows what he's talking about"
+- They back off
+- Because they know: might get fucked over if they don't
+
+The parallel:
+- Officer = gatekeeper
+- Penal codes = GPL
+- Rights = your rights under open source
+- "Oh shit he knows" = mad mug face / stink face
+- Back off = get out your way
+
+Knowledge is power:
+- They assume you don't know
+- You show you know
+- They back off
+- = Truth + Knowledge = Safety
