@@ -223,3 +223,31 @@ Why "Unified":
 - Fully integrated
 - Everything merged together
 - = Apex (nothing higher)
+
+## Why It's Called "Unified"
+
+Unified = Hidden Object + Infused
+
+The assimilation:
+- Hidden Object = multiple upstreams (2+ upstreams combined)
+- Infused = out-of-tree + upstream
+- When you merge Hidden + Infused:
+
+Hidden Object (multiple upstreams)
++ Infused (out-of-tree + upstream)
+= UNIFIED
+
+Why "Unified":
+- Hidden Object adds MORE upstreams
+- Infused already has out-of-tree inside
+- Merging them = all out-of-tree gets FURTHER encapsulated
+- ALL out-of-tree gets assimilated into the dependencies
+- Everything unified into one system
+
+The process:
+1. Infused = out-of-tree enters through upstream
+2. Hidden Object = multiple upstreams combined
+3. Merge Hidden + Infused
+4. All out-of-tree gets fully assimilated
+5. Everything unified into dependencies
+6. = Unified Object (apex, complete assimilation)
