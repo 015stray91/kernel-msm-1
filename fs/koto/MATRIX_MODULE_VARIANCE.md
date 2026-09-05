@@ -44,3 +44,19 @@ HYBRID = all 5 tiers working as one system:
 
 Not HybridMount (the file).
 HybridMount embodies the hybrid concept.
+
+## Why Unified is the Top Tier
+
+Unified is the top tier because:
+- Hidden Object is the top of one branch
+- Infused is the top of another branch
+- Unified combines the two best
+- = The apex
+- Nothing above it
+
+Hidden Object ─┐
+               ├──► Unified (apex)
+Infused      ─┘
+
+Both Hidden and Infused are the BEST in their regular standing.
+Combining them = the highest possible variant.
