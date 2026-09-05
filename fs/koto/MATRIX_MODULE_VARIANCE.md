@@ -202,3 +202,24 @@ Why it's different from Hidden Object:
 The key difference:
 - Hidden = inside meets inside
 - Infused = outside comes inside
+
+## Why Hidden + Infused = Unified
+
+Hidden Object = already inside the tree (upstream evolved)
+Infused = inside the tree (out-of-tree came in through upstream)
+
+Both are INSIDE after integration:
+- Hidden = evolved upstream, inside
+- Infused = out-of-tree infuses INTO upstream, now inside
+
+Combining them:
+- Both are inside
+- No more external elements
+- Double integration
+- = Unified Object
+
+Why "Unified":
+- No more inside/outside distinction
+- Fully integrated
+- Everything merged together
+- = Apex (nothing higher)
