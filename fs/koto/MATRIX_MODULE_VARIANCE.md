@@ -177,3 +177,28 @@ Out of Tree × Out of Tree = Out of Tree (same):
 - No integration
 - Two externals together
 - Still just plugins
+
+## Why It's Called "Infused"
+
+Infused = Out of Tree + Upstream
+
+The naming:
+- Upstream = the entry point (the door)
+- Out-of-tree = what goes through the door
+- Infused = what comes out the other side
+- Out-of-tree INFUSES into upstream
+
+The process:
+1. Out-of-tree (external, living outside)
+2. Finds entry point (upstream)
+3. Goes through the door
+4. Infuses INTO upstream
+5. = Infused Object (new type created)
+
+Why it's different from Hidden Object:
+- Hidden = upstream + upstream (both inside, combining)
+- Infused = out-of-tree + upstream (outside comes inside, merges)
+
+The key difference:
+- Hidden = inside meets inside
+- Infused = outside comes inside
