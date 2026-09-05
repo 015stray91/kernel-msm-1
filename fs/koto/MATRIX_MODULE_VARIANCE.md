@@ -82,3 +82,25 @@ But the foundation is always two.
 
 No third base type.
 No higher than Unified.
+
+## Why Upstream + Upstream = Hidden Object
+
+Combining upstreams:
+- Upstream + Upstream = Hidden Object
+- Both binaries are upstream
+- The options/features are ALREADY part of the tree
+- Combining them = features get merged
+- "Hidden" = the features were already in the tree
+- Not new features, just combined existing ones
+
+The hierarchy of mixing:
+- Upstream + Upstream = Hidden Object (features already there)
+- Out of tree + Out of tree = just Out of tree (bigger, same type)
+- Upstream + Out of tree = Infused (new type! different bases)
+- Hidden + Infused = Unified (apex)
+- All combined = Hybrid
+
+That's why Hidden Object exists:
+- It's not a new feature
+- It's existing upstream features combined
+- = "hidden" because features were already in the tree
