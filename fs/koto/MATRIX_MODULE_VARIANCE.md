@@ -4,56 +4,43 @@
 ## The 5 Variants (TIERED)
 
 ```
-                    UNIFIED
-                   (top tier)
+                UNIFIED
+           (Hidden + Infused merged)
                       ▲
+            ┌─────────┴─────────┐
+            │                   │
+       HIDDEN OBJECT         INFUSED
+     (evolved upstream)    (out-of-tree + upstream)
+            ▲                   ▲
+            └─────────┬─────────┘
                       │
-                  INFUSED
-              (out-of-tree + upstream)
+               OUT OF TREE
                       ▲
-                      │
-              HIDDEN OBJECT
-            (evolved upstream)
-                      ▲
-                      │
-                OUT OF TREE
-            (pure evolution)
-                      ▲
-                      │
                   UPSTREAM
-              (base identity)
 ```
 
-## HYBRID is the WHOLE THING (NOT HybridMount)
+## How Unified is Made
 
-**Hybrid** = the combination of:
-- Upstream
-- + Out of tree
-- + Hidden object
-- + Infused
-- = Unified at the top tier
+**Unified = Hidden Object + Infused merged**
 
-This is NOT HybridMount (the file). This is the hybrid of all 5.
-HybridMount just happens to embody this concept.
+- Hidden object + Infused → Unified
+- Two variants combine
+- Creates new function
+- Top tier achievement
 
 ## Tier Breakdown
 
-1. **Upstream** - base identity (lowest)
+1. **Upstream** - base identity (bottom)
 2. **Out of tree** - pure evolution (no upstream)
 3. **Hidden object** - evolved upstream, hidden
 4. **Infused** - out-of-tree merged INTO upstream
-5. **Unified** - top tier, everything combined
-6. **HYBRID** - the whole stack working as one
+5. **Unified** - Hidden + Infused merged (top)
 
-## What "Hybrid" Means Here
+## HYBRID = The Whole Stack
 
-Hybrid = the COMPLETE 5-tier stack:
-- Has upstream traits
-- Has out-of-tree traits
-- Has hidden object traits
-- Has infused traits
-- Has unified traits
+HYBRID = all 5 tiers working as one system:
+- Upstream + Out of tree + Hidden + Infused + Unified
 - = Full hybrid system
 
 Not HybridMount (the file).
-The hybrid IS the 5 variants unified into one.
+HybridMount embodies the hybrid concept.
