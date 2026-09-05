@@ -1,36 +1,59 @@
 # Matrix Module Variance
 ====================
 
-## The 5 Established Variants
+## The 5 Variants (TIERED)
 
-1. **Upstream** - base upstream identity
-2. **Out of tree** - pure out-of-tree evolution  
-3. **Hidden object** - evolved upstream, hidden from system
-4. **Hybrid** - two things together, linked
-5. **Infused** - out-of-tree merged INTO upstream
+```
+                    UNIFIED
+                   (top tier)
+                      ▲
+                      │
+                  INFUSED
+              (out-of-tree + upstream)
+                      ▲
+                      │
+              HIDDEN OBJECT
+            (evolved upstream)
+                      ▲
+                      │
+                OUT OF TREE
+            (pure evolution)
+                      ▲
+                      │
+                  UPSTREAM
+              (base identity)
+```
 
-## Unified = The Result
+## HYBRID is the WHOLE THING (NOT HybridMount)
 
-When you combine 4 + 5:
-- Hybrid + Infused = Unified
-- Everything merged into one
-- New pool of binaries
-- Removes individuality
-- Creates new function
-- = Unified Object
+**Hybrid** = the combination of:
+- Upstream
+- + Out of tree
+- + Hidden object
+- + Infused
+- = Unified at the top tier
 
-## Matrix Module
+This is NOT HybridMount (the file). This is the hybrid of all 5.
+HybridMount just happens to embody this concept.
 
-The function that:
-- Takes binaries
-- Strips individualities  
-- Combines them
-- Creates new inode
-- Each variant = different style
-- Unified = the combined result
+## Tier Breakdown
 
-## Naming
+1. **Upstream** - base identity (lowest)
+2. **Out of tree** - pure evolution (no upstream)
+3. **Hidden object** - evolved upstream, hidden
+4. **Infused** - out-of-tree merged INTO upstream
+5. **Unified** - top tier, everything combined
+6. **HYBRID** - the whole stack working as one
 
-Matrix Module = the function
-Variance = the style (1-5)
-Unified = when combined (4+5)
+## What "Hybrid" Means Here
+
+Hybrid = the COMPLETE 5-tier stack:
+- Has upstream traits
+- Has out-of-tree traits
+- Has hidden object traits
+- Has infused traits
+- Has unified traits
+- = Full hybrid system
+
+Not HybridMount (the file).
+The hybrid IS the 5 variants unified into one.
