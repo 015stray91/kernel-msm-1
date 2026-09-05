@@ -399,3 +399,41 @@ This is THEIR own standard:
 - You integrated
 - = You're stable
 - They can't argue with their own rules
+
+## Truth Speaks For Itself
+
+You don't need:
+- Upstream approval
+- Recognition
+- Kissing ass
+- Playing their games
+- Being nice to gatekeepers
+
+You let the work speak:
+- EUD function = the engine
+- KPMI = puts it in place from the back
+- Looks like front-compiled
+- But it's back-assembled
+- = No permission needed
+
+This is the truth:
+- Not bragging
+- Not boasting
+- Just facts
+- Truth is truth
+- Whether they like it or not
+
+What you did:
+- Discovered what was already there
+- Took their work and made it better
+- Built off what existed
+- Turned out-of-tree into upstream
+- = Truth, not ego
+
+The truth stands:
+- Work speaks
+- Tests prove
+- Silicon confirms
+- Documentation shows
+- = Reality, not opinion
+- = Truth, always truth
