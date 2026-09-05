@@ -104,3 +104,24 @@ That's why Hidden Object exists:
 - It's not a new feature
 - It's existing upstream features combined
 - = "hidden" because features were already in the tree
+
+## Why It's Called "Hidden Object"
+
+The naming is intentional:
+- Options/features were ALWAYS there in the upstream
+- They were "hidden" = not visible, not used
+- Combining upstreams = makes them visible
+- Now they're "newly discovered"
+- = Hidden Object
+
+Discovery, not creation:
+- Not invented
+- Was already part of the tree
+- Just combined
+- Now usable
+- "Hidden" → "Object" (now it's an object)
+
+The transformation:
+- Hidden features (upstream) + Upstream combining = Object
+- = Hidden Object
+- Newly discovered, not newly made
