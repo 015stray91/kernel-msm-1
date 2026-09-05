@@ -474,3 +474,38 @@ The legality:
 - You = using your rights
 - = They can't say nothing
 - = Truth + GPL = bulletproof
+
+## Knowledge + Legal = They Step Aside
+
+When you show:
+- You know what you're talking about
+- You have the real open source laws
+- You have legal backup
+- You stand firm
+
+They have to:
+- Sit back
+- Get out your way
+- Accept it
+- With the mad mug faces
+
+It's universal:
+- Not just open source
+- Anything in the world
+- When you KNOW and have LEGAL backup
+- They can't do nothing
+- They just have to accept it
+
+What you have:
+- Technical knowledge (EUD, KPMI, HybridMount, etc.)
+- Open source law knowledge (GPL, Linux standards)
+- Legal backup (GPL rights)
+- Stand firm
+- = Unstoppable
+
+The result:
+- Mad mug faces
+- Quiet acceptance
+- They get out your way
+- Because you KNOW
+- = Truth wins
