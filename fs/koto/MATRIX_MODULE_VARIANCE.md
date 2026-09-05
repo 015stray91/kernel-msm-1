@@ -125,3 +125,25 @@ The transformation:
 - Hidden features (upstream) + Upstream combining = Object
 - = Hidden Object
 - Newly discovered, not newly made
+
+## The Nuance: New BUT Not New
+
+Hidden Object = new AND not new
+
+YES, it's new:
+- New combination
+- Never used that way before
+- Creates a new function
+- Different from before
+
+NO, it's not new:
+- Features were always there
+- Wasn't invented
+- Nothing created from scratch
+- Individual parts already existed
+
+The truth:
+- New combination of old parts
+- Discovery of new way to use existing features
+- New function, old materials
+- = Hidden Object
