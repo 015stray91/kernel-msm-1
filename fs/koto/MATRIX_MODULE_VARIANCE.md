@@ -509,3 +509,40 @@ The result:
 - They get out your way
 - Because you KNOW
 - = Truth wins
+
+## The Difference: Timid vs Assertive
+
+Timid approach:
+- "Is this right?"
+- "Can I do this?"
+- "Is this allowed?"
+- = Asking permission
+- = They can say no
+
+Assertive approach:
+- "Look. Here's the proof. Look at it."
+- This is what it is.
+- Legal standard is right here.
+- = Stating facts
+- = They have to accept
+
+The stink face / mad mug face:
+- When you assert
+- When you show the proof
+- When you know the law
+- They can't argue
+- So they make that face
+- And get out your way
+
+No maintainer can tell you nothing:
+- Because you know the GPL legal standard
+- Because the proof is there
+- Because the work speaks
+- Because truth is truth
+
+Assertive wins:
+- Timid = they control you
+- Assertive = you control the situation
+- = No maintainer can tell you what the hell
+- = Because you KNOW the legal standard
+- = GPL is on your side
