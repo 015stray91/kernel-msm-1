@@ -60,3 +60,25 @@ Infused      ─┘
 
 Both Hidden and Infused are the BEST in their regular standing.
 Combining them = the highest possible variant.
+
+## The Foundation: Two Base Types
+
+At the bottom of everything = ONLY TWO basic types of binary:
+
+1. **Upstream**
+2. **Out of tree**
+
+Everything else = combinations of these two.
+
+Tier mapping:
+- Hidden Object = Upstream (evolved)
+- Infused = Upstream + Out of tree (fused)
+- Unified = Hidden + Infused (both bases merged)
+- Hybrid = everything combined
+
+The roots are binary (upstream vs out-of-tree).
+The branches grow infinitely.
+But the foundation is always two.
+
+No third base type.
+No higher than Unified.
